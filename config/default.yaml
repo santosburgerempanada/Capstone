@@ -16,18 +16,21 @@ battery:
   consumption_kwh_per_km: 1.4         # consumo con pasajeros (decisión del equipo; el paper usa 1.8, NREL [38])
   deadhead_consumption_factor: 0.8    # consumo en deadhead = factor × consumption_kwh_per_km (1.12 kWh/km)
 
+# Costos en USD, con los datos de Santiago. Las instancias reales leen la tarifa diurna de data/raw/tariffs/electricity_prices.csv
+# y el costo fijo por bus de data/raw/other/parameters.csv; las sintéticas (toy, toy_carga) usan los valores de aquí.
 costs:
-  currency: CNY
-  deadhead_cost_per_km: 0.5   # e_d: costo por km de deadhead (referencial en sintéticos; Santiago usa parameters.csv)
-  overnight_price_per_kwh: 0.30   # e_c^0: carga nocturna (fuera de punta)
-  # Tarifa horaria (time-of-use) para carga diurna e_c^t
+  currency: USD
+  deadhead_cost_per_km: 0.5       # e_d: cost_per_km de data/raw/other/parameters.csv
+  overnight_price_per_kwh: 0.10   # e_c^0: el mínimo de electricity_prices.csv (P1)
+  vehicle_fixed_cost: 250         # e_f: vehicle_fixed_cost de data/raw/other/parameters.csv
+  # Tarifa horaria para carga diurna e_c^t: los bloques de data/raw/tariffs/electricity_prices.csv
   tou_prices:
-    - {start: "22:00", end: "06:00", price: 0.30}
-    - {start: "06:00", end: "08:00", price: 0.69}
-    - {start: "08:00", end: "11:00", price: 1.06}
-    - {start: "11:00", end: "18:00", price: 0.69}
-    - {start: "18:00", end: "21:00", price: 1.06}
-    - {start: "21:00", end: "22:00", price: 0.69}
+    - {start: "00:00", end: "08:00", price: 0.10}
+    - {start: "08:00", end: "14:00", price: 0.15}
+    - {start: "14:00", end: "17:00", price: 0.22}
+    - {start: "17:00", end: "19:00", price: 0.15}
+    - {start: "19:00", end: "22:00", price: 0.22}
+    - {start: "22:00", end: "00:00", price: 0.11}
 
 initial_solution:
   use_preconnection: true

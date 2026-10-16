@@ -10,18 +10,10 @@ from ebus.config import DEFAULT_CONFIG_PATH, load_config
 from ebus.data.tariffs import tariff_from_blocks
 from ebus.model.entities import BusType, Depot, Instance, Tariff, Trip
 
-_DEFAULT_TOU_BLOCKS = [
-    {"start": "22:00", "end": "06:00", "price": 0.30},
-    {"start": "06:00", "end": "08:00", "price": 0.69},
-    {"start": "08:00", "end": "11:00", "price": 1.06},
-    {"start": "11:00", "end": "18:00", "price": 0.69},
-    {"start": "18:00", "end": "21:00", "price": 1.06},
-    {"start": "21:00", "end": "22:00", "price": 0.69},
-]
-
-
 def _default_tariff() -> Tariff:
-    return tariff_from_blocks(_DEFAULT_TOU_BLOCKS, overnight_price=0.30)
+    """Tarifa de `costs` en config/default.yaml (`tou_prices` y `overnight_price_per_kwh`)."""
+    costs = load_config(DEFAULT_CONFIG_PATH)["costs"]
+    return tariff_from_blocks(costs["tou_prices"], overnight_price=costs["overnight_price_per_kwh"])
 
 
 def _default_deadhead_cost_per_km(deadhead_cost_per_km: float | None) -> float:
@@ -34,9 +26,10 @@ def _default_deadhead_cost_per_km(deadhead_cost_per_km: float | None) -> float:
 def _default_bus_type(
     consumption_kwh_per_km: float | None = None, deadhead_consumption_factor: float | None = None
 ) -> BusType:
-    """Tipo 1 de la Tabla 6 del paper (batería, carga, depreciación). El consumo sale de
-    `battery` en config/default.yaml, salvo que se pase explícito."""
-    battery_cfg = load_config(DEFAULT_CONFIG_PATH)["battery"]
+    """Tipo 1 de la Tabla 6 del paper (batería y carga). El consumo sale de `battery` y el costo fijo por bus de
+    `costs.vehicle_fixed_cost` en config/default.yaml, salvo que el consumo se pase explícito."""
+    cfg = load_config(DEFAULT_CONFIG_PATH)
+    battery_cfg = cfg["battery"]
     if consumption_kwh_per_km is None:
         consumption_kwh_per_km = battery_cfg["consumption_kwh_per_km"]
     if deadhead_consumption_factor is None:
@@ -45,7 +38,7 @@ def _default_bus_type(
         id="type1", battery_kwh=200, max_charge_kw=100,
         trip_kwh_per_km=consumption_kwh_per_km,
         deadhead_kwh_per_km=consumption_kwh_per_km * deadhead_consumption_factor,
-        fixed_cost_per_bus=198,
+        fixed_cost_per_bus=cfg["costs"]["vehicle_fixed_cost"],
     )
 
 

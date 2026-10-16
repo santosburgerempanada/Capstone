@@ -49,8 +49,7 @@ costs:
   currency: USD                      # la tarifa de data/raw/tariffs/tariffs.yaml viene en USD/kWh
   deadhead_cost_per_km: 0.5          # USD/km (cost_per_km de data/raw/other/parameters.csv; unidad en docs/datos/diccionario_viajes.csv)
   overnight_price_per_kwh: 0.10      # USD/kWh e_c^0: el mínimo de electricity_prices.csv (P1); ver docs/decisiones/parametros.md
-  # TODO: la tarifa eléctrica en Chile (p. ej. AT4.3) combina cargo por energía y cargo por
-  # demanda en horas de punta; ver docs/paper/adaptacion_santiago.md. Aquí se deja el esquema
-  # por bloques horarios del paper; completar con los precios equivalentes.
+  # La tarifa diurna se lee de data.tariffs_file (electricity_prices.csv). TODO: la tarifa eléctrica en Chile (p. ej.
+  # AT4.3) combina cargo por energía y cargo por demanda en horas de punta.
   tou_prices: null
   peak_demand_charge: null           # extensión opcional al modelo del paper
