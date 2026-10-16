@@ -1,0 +1,11 @@
+# Instancia de juguete (Fig. 1 del paper): 3 viajes, 1 depósito, 4 paraderos.
+# Sirve para probar la red espacio-tiempo y el MILP mientras no hay datos de Santiago.
+extends: ../default.yaml
+
+case:
+  name: toy
+
+data:
+  source: synthetic
+  synthetic:
+    kind: figure1   # usa data.synthetic.paper_figure1_instance(); "random" usaría generate_instance()

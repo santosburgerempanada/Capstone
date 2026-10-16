@@ -1,0 +1,56 @@
+# Caso Santiago de Chile. Hereda de default.yaml. Los valores `null` / TODO deben completarse
+# cuando estén los datos (ver docs/datos/datos_requeridos.md).
+extends: default.yaml
+
+case:
+  name: santiago
+  description: Buses eléctricos del sistema Red Movilidad
+
+data:
+  gtfs_dir: data/raw/gtfs            # GTFS publicado por DTPM
+  depots_file: data/raw/depots/depots.csv
+  charger_capacity_file: data/raw/depots/charger_capacity.csv
+  tariffs_file: data/raw/tariffs/electricity_prices.csv
+  fleet_file: data/raw/fleet/bus_types.csv
+  parameters_file: data/raw/other/parameters.csv
+  deadhead_file: null                # matriz de la instancia; se genera con scripts/generar_deadheads.py
+  service_date: null                 # día tipo a modelar (ej. laboral), formato YYYY-MM-DD
+  routes: null                       # lista de servicios a incluir; null = todos los eléctricos
+  operator: null                     # filtrar por unidad de negocio / operador, si aplica
+
+# Estimación de la matriz de deadheads (data/deadhead.py::estimar_matriz_deadheads; ver docs/decisiones/datos.md).
+# No validados con datos de Santiago: reemplazar por ruteo en red vial (OSM) o una matriz del operador.
+deadhead_estimation:
+  speed_kmh: 50                      # velocidad en deadhead (valor por defecto fijado por el equipo)
+  detour_factor: 1.3                 # km por red ≈ haversine × factor
+  trip_km_rule: minimo               # pares con viaje: "minimo" (menor entre estimación y km del viaje) o "mediana"
+
+# Capacidad de estacionamiento de los electroterminales: buses dentro del depósito a la vez, también de noche (restricción;
+# docs/decisiones/modelo.md). Es propia de cada terminal, igual en todas las instancias. Regla (2026-10-13):
+#   capacidad = máx(1 000, flota del baseline del día completo de ese terminal solo) + 200.
+# Los terminales cuyo baseline usa a lo más 1 000 buses quedan en el valor general (1 200); los demás van en
+# capacidad_por_deposito (por nombre de terminal). No cambia los cargadores (C_d).
+depots:
+  capacidad_estacionamiento: 1200    # máx(1 000, flota) + 200 con flota <= 1 000 (Vespucio Norte: baseline de VN-dia, 792)
+  capacidad_por_deposito:
+    El Conquistador: 2394            # 2 194 (baseline de EC-dia, 2026-10-06) + 200
+    # La Reina usa el valor general: su baseline (LR-dia, 2026-10-14) usa 828 buses, menos de 1 000.
+    # Santa Rosa y Los Espinos: pendientes de sus baselines (lote 4 de la entrega 2). Mientras tanto rige el valor general;
+    # su hora punta ya supera 1 200 viajes simultáneos (1 610 y 1 483), así que el validador marcará sus baselines.
+
+network:
+  horizon_start: null                # en subproblemas se calcula con network.horizon_margin (data/horizonte.py)
+  horizon_end: null
+
+battery:
+  consumption_kwh_per_km: null       # hereda 1.4 de default.yaml; TODO: consumo real por modelo de bus
+
+costs:
+  currency: USD                      # la tarifa de data/raw/tariffs/tariffs.yaml viene en USD/kWh
+  deadhead_cost_per_km: 0.5          # USD/km (cost_per_km de data/raw/other/parameters.csv; unidad en docs/datos/diccionario_viajes.csv)
+  overnight_price_per_kwh: 0.10      # USD/kWh e_c^0: el mínimo de electricity_prices.csv (P1); ver docs/decisiones/parametros.md
+  # TODO: la tarifa eléctrica en Chile (p. ej. AT4.3) combina cargo por energía y cargo por
+  # demanda en horas de punta; ver docs/paper/adaptacion_santiago.md. Aquí se deja el esquema
+  # por bloques horarios del paper; completar con los precios equivalentes.
+  tou_prices: null
+  peak_demand_charge: null           # extensión opcional al modelo del paper

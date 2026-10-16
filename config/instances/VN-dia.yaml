@@ -1,0 +1,17 @@
+# Día hábil completo (servicio L) del electroterminal Vespucio Norte: todos sus viajes (7 448).
+# Ver docs/planes/cerrados/plan_dia_completo_vn.md y docs/decisiones/instancias.md ("Día completo de un electroterminal").
+extends: ../particion.yaml
+
+case:
+  name: VN-dia
+
+data:
+  source: subproblema
+  trips_file: data/processed/centroide/viajes_dia_habil.csv
+  terminal: Vespucio Norte           # en vez de block_id: todos los bloques del terminal
+  deadhead_file: data/interim/deadhead_VN.csv   # scripts/generar_deadheads.py --config config/instances/VN-dia.yaml
+
+network:
+  day_start: "04:00"                 # los viajes que salen antes pasan al final del día (+24 h)
+
+# battery.soc_initial no se fija: vale soc_max, como en el paper (restricción (12)).

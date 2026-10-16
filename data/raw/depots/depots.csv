@@ -1,0 +1,6 @@
+depot_id,name,lat,lon,capacity,power_kw
+1,Vespucio Norte,-33.37,-70.68,150,27000
+2,El Conquistador,-33.42,-70.7,180,27000
+3,Los Espinos,-33.52,-70.65,120,27000
+4,La Reina,-33.44,-70.54,100,27000
+5,Santa Rosa,-33.53,-70.65,150,27000

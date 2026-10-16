@@ -1,0 +1,25 @@
+periods:
+  - period_id: P1
+    start_hour: 0
+    end_hour: 8
+    price_usd_kwh: 0.10
+  - period_id: P2
+    start_hour: 8
+    end_hour: 14
+    price_usd_kwh: 0.15
+  - period_id: P3
+    start_hour: 14
+    end_hour: 17
+    price_usd_kwh: 0.22
+  - period_id: P4
+    start_hour: 17
+    end_hour: 19
+    price_usd_kwh: 0.15
+  - period_id: P5
+    start_hour: 19
+    end_hour: 22
+    price_usd_kwh: 0.22
+  - period_id: P6
+    start_hour: 22
+    end_hour: 24
+    price_usd_kwh: 0.11

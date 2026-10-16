@@ -1,0 +1,18 @@
+# Día hábil completo de los cinco electroterminales juntos (64 800 viajes, 5 depósitos): el problema completo. Cualquier
+# bus de cualquier depósito puede hacer cualquier viaje. Lote 4c de docs/planes/entrega_2.md; antes hay que medir si es
+# abordable (T8: memoria y tiempo del baseline y de una iteración del ALNS).
+extends: ../particion.yaml
+
+case:
+  name: global-dia
+
+data:
+  source: subproblema
+  trips_file: data/processed/centroide/viajes_dia_habil.csv
+  terminales: [Vespucio Norte, El Conquistador, Los Espinos, La Reina, Santa Rosa]
+  deadhead_file: data/interim/deadhead_global.csv  # scripts/generar_deadheads.py --config config/instances/global-dia.yaml
+
+network:
+  day_start: "04:00"                 # los viajes que salen antes pasan al final del día (+24 h)
+
+# battery.soc_initial no se fija: vale soc_max, como en el paper (restricción (12)).

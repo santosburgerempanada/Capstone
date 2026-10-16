@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ebus"
+version = "0.1.0"
+description = "Programación y carga conjunta de buses eléctricos multi-depósito (Jia & An, 2025) para Santiago"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",          # linear_sum_assignment (algoritmo húngaro)
+    "networkx",
+    "pyyaml",
+    "gurobipy",       # MILP (ec. 1-16), modelo inicial (17-19) y post-reparación
+    "matplotlib",
+    "geopandas",      # coordenadas de paraderos / terminales
+    "tqdm",
+    "openpyxl",       # Excel piloto de la partición
+    "alns==7.0.0",    # ciclo del ALNS (CLAUDE.md: probada con 7.0.0)
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "jupyter"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

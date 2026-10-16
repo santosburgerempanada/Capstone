@@ -1,0 +1,2 @@
+type_id,battery_kwh,range_km,charge_power_kw,min_soc,max_soc
+BYD_K9,350,250,180,0.1,1

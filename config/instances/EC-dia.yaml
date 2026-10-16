@@ -1,0 +1,17 @@
+# Día hábil completo (servicio L) del electroterminal El Conquistador: todos sus viajes (17 288).
+# Para comparar contra VN-EC-dia (los dos terminales juntos); ver docs/planes/cerrados/plan_dos_terminales.md.
+extends: ../particion.yaml
+
+case:
+  name: EC-dia
+
+data:
+  source: subproblema
+  trips_file: data/processed/centroide/viajes_dia_habil.csv
+  terminal: El Conquistador
+  deadhead_file: data/interim/deadhead_EC.csv   # scripts/generar_deadheads.py --config config/instances/EC-dia.yaml
+
+network:
+  day_start: "04:00"                 # los viajes que salen antes pasan al final del día (+24 h)
+
+# battery.soc_initial no se fija: vale soc_max, como en el paper (restricción (12)).

@@ -1,0 +1,475 @@
+level_id,level_index,level_name
+AG:L0,0,Nivel 1 – Acceso / Calle
+AG:L1,1,Nivel 2 – Boletería
+AG:L2,2,Nivel 3 – Andenes
+AH:L0,0,Nivel 0 – Calle
+AH:L-1,-1,Nivel -1 – Boletería
+AH:L-2,-2,Nivel -2 – Andenes
+AL:L0,0,Nivel 0 – Calle
+AL:L-1,-1,Nivel -1 – Boletería
+AL:L-2,-2,Nivel -2 – Andenes
+AN-NA:L0,0,Calle
+AN:L0,0,Boleteria Linea 2
+AN:L-1,-1,Anden Linea 2
+NA:L-1,-1,Boleteria Linea 5
+NA:L-2,-2,Anden Linea 5
+AV:L0,0,Calle
+AV:L-1,-1,Descanso
+AV:L-2,-2,Boleteria
+AV:L-3,-3,Andén
+BA-BQ:L0,0,Nivel 0 - Calle
+BA-BQ:L-1,-1,Nivel -1  - Boletería
+BA-BQ:L-2,-2,Nivel -2  - Andén( L1)
+BA-BQ:L-3,-3,Nivel -3 - Intermedio
+BA-BQ:L-4,-4,Nivel -4 - Andén (L5)
+BE:L0,0,Nivel 0 – Acceso / Calle
+BE:L-1,-1,Nivel -1 – Boletería / Servicios
+BE:L-2,-2,Nivel -2 – Andenes L5
+BIL:L0,0,Nivel 0 - Calle
+BIL:L-1,-1,Nivel -1 - Mesanina
+BIL:L-2,-2,Nivel -2 - Andén
+BIO:L0,0,Nivel 0 - Calle
+BIO:L-1,-1,Nivel -1 -Servicios
+BIO:L-2,-2,Nivel -2-  Intermedio (Puente)
+BIO:L-3,-3,Nivel -3 - Andén
+BL:L1,0,Nivel 1 – Calle y Boletería
+BL:L-1,-1,Nivel -1 – Intermedio 1
+BL:L-2,-2,Nivel -2 – Intermedio 2
+BL:L-3,-3,Nivel -3 – Cambio de Andén
+BL:L-4,-4,Nivel -4 – Andenes
+BR:L0,0,Nivel 0 – Acceso / Calle
+BR:L-1,-1,Nivel -1 – Boletería / Servicios
+BR:L-2,-2,Nivel -2 – Intermedio 1
+BR:L-3,-3,Nivel -3 – Cambio de Andén
+BR:L-4,-4,Nivel -4 – Andenes
+CA-PCA:L0,0,Nivel 0 – Calle
+CA-PCA:L-1,-1,Nivel -1 – Boleteria
+CA:L-2,-2,Nivel -2 – Anden linea 2
+CA-PCA:L-3,-3,Nivel -3 – Combinacion linea 3
+PCA:L-4,-4,Nivel -4 – Cambio de anden l3
+PCA:L-5,-5,Nivel -5 – Andén línea 3
+CAR:L0,0,Nivel 0 – Calle / Acceso
+CAR:L-1,-1,Nivel -1 – Boletería / Distribución
+CAR:L-2,-2,Nivel -2 – Intermedio
+CAR:L-3,-3,Nivel -3 – Andenes
+CB:L0,0,Calle
+CB:L-1,-1,Boleteria
+CB:L-2,-2,Anden
+CCH:L0,0,Nivel 0 – Calle
+CCH:L-1,-1,Nivel -1 – Boletería / Distribución
+CCH:L-2,-2,Nivel -2 – Intermedio Andenes
+CCH:L-3,-3,Nivel -3 – Andenes
+CE:L0,0,Calle
+CE:L-1,-1,Mesanina
+CE:L-2,-2,Andén
+CER:L0,0,Nivel 0 - Calle
+CER:L-1,-1,Nivel -1 - Boletería
+CER:L-2,-2,Nivel -2 Piso intermedio (puente)
+CER:L-3,-3,Nivel -3 - Andén
+CH-UCH:L0,0,Nivel 0 - Calle
+CH-UCH:L-1,-1,Nivel -1 - Intermedio( Zona no Paga)
+CH-UCH:L-2,-2,Nivel -2- Boletería
+CH-UCH:L-3,-3,Nivel -3- Andén L1 y cambio de andén
+CH-UCH:L-4,-4,Nivel -4 - Puente de cambio de andén L3
+CH-UCH:L-5,-5,Nivel -5 - Andén L3
+CM:L0,0,Calle
+CM:L-1,-1,Servicios-Boleteria
+CM:L-2,-2,Anden
+CN:L0,0,Calle
+CN:L-1,-1,Boletería
+CN_L-2,-2,Andén
+COL:L0,0,Nivel 0 – Calle
+COL:L-1,-1,Nivel -1 – Mesanina
+COL:L-2,-2,Nivel -2 – Andenes
+CV:L0,0,Nivel 1 – Acceso / Calle
+CV:L1,1,Nivel 2 – Boletería
+CV:L2,2,Nivel 3 – Andenes
+DE:L0,0,Calle
+DE:L-1,-1,Boleteria
+DE:L-2,-2,Anden
+DO:L0,0,Calle
+DO:L-1,-1,Mesanina
+DO:L-2,-2,Andén
+DS:L0,0,Nivel 0 – Calle / Accesos
+DS:L-1,-1,Nivel -1 | Boletería
+DS:L-2,-2,Nivel -2 | Andenes
+EB:L0,0,Calle
+EB:L-1,-1,Servicios-Boleteria
+EB:L-2,-2,Anden
+EC:L0,0,Nivel 0 – Calle
+EC:L-1,-1,Nivel -1 – Boletería
+EC:L-2,-2,Nivel -2 – Andenes
+ECO:L2,2,Nivel 2 – Andenes
+ECO:L1,1,Nivel 1 – Mesanina
+ECO:L0,0,Nivel 0 – Calle
+EI:L0,0,Calle
+EI:L-1,-1,Boletería
+EI_L-2,-2,Andén
+EL:L0,0,Nivel 0 – Calle
+EL:-1.5,-1,Nivel -1.5 - Pasillo cambio de andén PMR
+EL:L-1,-1,Nivel -1 – Boletería
+EL:L-2,-2,Nivel -2 – Andenes
+EM:L0,0,Nivel 0 – Calle
+EM:L-1,-1,Nivel -1 – Mesanina
+EM:SUBCENTRO,-1,Nivel -1 – Subcentro
+EM:L-2,-2,Nivel -2 – Andenes
+EP:L0,0,Calle
+EP:L-1,-1,Boleteria
+EP:L-2,-2,Anden
+ESN:L0,0,Nivel 0 – Calle
+ESN:L-1,-1,Nivel -1 – Servicios
+ESN:L-2,-2,Nivel -2 – Nivel interintermedio
+ESN:L-3,-3,Nivel -3 – Andenes
+ESP:L0,0,Nivel 0 – Calle
+ESP:L-1,-1,Nivel -1 – Intermedio Peatonal
+ESP:L-2,-2,Nivel -2 – Servicios / Boletería / Cambio de Andén
+ESP:L-3,-3,Nivel -3 – Intermedio Andenes
+ESP:L-4,-4,Nivel -4 – Andenes
+FCV:L0,0,Nivel 0 – Calle
+FCV:L-1,-1,Nivel -1 – Servicios
+FCV:L-2,-2,Nivel -2 – Mesanina
+FCV:L-3,-3,Nivel -3 – Andenes
+FER:L0,0,Nivel 0 – Calle / Mezanina
+FER:L-1,-1,Nivel -1 – Boletería / Distribución
+FER:L-2,-2,Nivel -2 – Andenes
+FR-FRA:L0,0,Calle
+FRA:L-1,-1,Boleteria L6
+FR:L-1,-1,Boleteria L2
+FR:L-2,-2,Andén L2
+FRA-FR:L-3,-3,Combinacion L2-L6
+FRA:L-4,-4,Anden L6
+GL:L1,0,Nivel 1 – Calle y Boletería
+GL:L-1,-1,Nivel -1 – Intermedio 1
+GL:L-2,-2,Nivel -2 – Intermedio 2
+GL:L-3,-3,Nivel -3 – Intermedio 3
+GL:L-4,-4,Nivel -4 – Cambio de Andén
+GL:L-5,-5,Nivel -5 – Andenes
+GO:L0,0,Nivel 0 – Calle
+GO:L-1,-1,Nivel -1 – Boletería
+GO:L-2,-2,Nivel -2 – Andenes
+HM:L0,0,Nivel 0 – Calle
+HM:L-1,-1,Nivel -1 – Boletería
+HM:L-2,-2,Nivel -2 – Andenes
+HOS:L0,0,Nivel 0 - Calle 1
+HOS:L-1,-1,Nivel -1 - Intermedio 1
+HOS:L-2,-2,Nivel -2 - Servicios 2 / Boletería
+HOS:L-3,-3,Nivel -3 - Intermedio 3
+HOS:L-4,-4,Nivel -4 - Andén
+HSR:L2,2,Nivel 2 - Andén
+HSR:L1,1,Nivl 1 - Cambio de andén
+HSR:L0,0,Nivel 0 -Calle
+HSR:L-1,-1,Nivel -1 - Mesanina
+IR:L0,0,Nivel 0 – Calle / Acceso
+IRA:L0,0,Nivel 0 – Calle / Acceso
+IR:L-1,-1,Nivel -1 | Boleteria
+IRA:L-1,-1,Nivel -1 | Intermedio -1
+IR:L-2,-2,Nivel -2 | Andenes
+IRA:L-2,-2,Nivel -2 | Andén L5 y Servicios L3
+IRA:L-3,-3,Nivel -3 | Intermedio -3
+IRA:L-4,-4,Nivel -4 | Cambio de Andén
+IRA:L-5,-5,Nivel -5 | Andenes
+ISU:L0,0,Nivel 0 - Calle
+ISU:L-1,-1,Nivel -1 - Boletería
+ISU:L-2,-2,Nivel -2 - Piso intermedio
+ISU:L-3,-3,Nivel -3 - Andén
+LA:L0,0,Nivel 0 – Calle
+LA:L-1,-1,Nivel -1 – Boletería
+LA:L-2,-2,Nivel -2 – Andenes
+LC-LCI:L0,0,Calle
+LC:L-1,-1,Boleteria L4A
+LCI:L-1,-1,Intermedio L2
+LC:L-2,-2,Anden L4A
+LCI:L-2,-2,Boleteria L2
+LCI:L-3,-3,Anden L2
+LCR:L0,0,Nivel 0 – Calle
+LCR:L-1,-1,Nivel -1 – Boletería / Distribución
+LCR:L-2,-2,Nivel -2 – Andenes
+LD:L0,0,Nivel 0 – Calle
+LD:L-1,-1,Nivel -1 – Intermedio
+LD:L-2,-2,Nivel -2 – Boletería
+LD:L-3,-3,Nivel -3 – Andenes
+LE-LEN:L0,0,Nivel 0 - Calle
+LE:-1,-1,Nivel -1 Boletería (L1)
+LEN:L-1,-1,Nivel -1 - Boletería (L6)
+LE:L-2,-2,Nivel -2 - Andén (L1)
+LEN:L-2,-2,Nivel -2-  Servicios  (L6)
+LEN:L-3,-3,Nivel -3 - Boletería (L6)
+LE:L-3,-3,Nivel -3- Intermedio (L6)
+LEN:L-4,-4,Nivel -4 Intermedio de cambio de andén (L6)
+LEN:L-5,-5,Nivel -5 - Andén (L6)
+LF:L0,0,Nivel 0 – Calle
+LF:L-1,-1,Nivel -1 – Boleterías
+LF:L-2,-2,Nivel -2 – Andenes
+LGR:L1,1,Boletería
+LGR:L0,0,Calle
+LH:L0,0,Nivel 0 – Calle
+HE:L0,0,Nivel 0 – Mesanina L2
+HE:L-1,-1,Nivel -1 – Andenes L2
+LH:L-1,-1,Nivel -1 – Boletería L1
+LH:L-2,-2,Nivel -2 – Andenes L1
+LIB:L0,0,Nivel 0 – Calle
+LIB:L-1,-1,Nivel -1 – Servicios / Boletería
+LIB:L-2,-2,Nivel -2 – Intermedio / Cambio de Andén
+LIB:L-3,-3,Nivel -3 – Andenes
+LL:L0,0,Nivel 0 – Calle
+LL:L-1,-1,Nivel -1 – Mesanina
+LL:L-2,-2,Nivel -2 – Andenes
+LM:L0,0,Nivel 0 – Calle
+LM:L-1,-1,Nivel -1 – Boleterías
+LM:L-2,-2,Nivel -2 – Andenes
+LME:L0,0,Nivel 0 - Calle
+LME:L-1,-1,Nivel -1 - Boletería
+LME:L-2,-2,Nivel -2 - Andén
+LO:L0,0,Calle
+LO:L-1,-1,Boleteria
+LO:L-2,-2,Anden
+LOR:L0,0,Nivel 0 - Calle
+LOR:L-1,-1,Nivel -1 - Mesanina
+LOR:L-2,-2,Nivel -2 - Andén
+LP:L4,4,Nivel 4 – Intermedio
+LP:L3,3,Nivel 3 – Intermedio y Andenes
+LP:L2,2,Nivel 2 – Intermedio
+LP:L1,1,Nivel 1 – Calle y Boletería
+LPR:L1,1,Nivel 1 - Mesanina
+LPR:L0,0,Nivel 0 - Calle y andén
+LQU:L2,2,Nivel 2 - Andén
+LQU:L1,1,Nivel 1 - Mesanina
+LQU:L0,0,Nivel 0 - Calle
+LR:L0,0,Nivel 0 – Calle
+LR:L-1,-1,Nivel -1 – Boletería
+LR:L-2,-2,Nivel -2 – Andenes
+LS:L4,4,Nivel 4 – Cambio de Andén
+LS:L3,3,Nivel 3 – Andenes
+LS:L2,2,Nivel 2 – Intermedio
+LS:L1,1,Nivel 1 – Calle y Boletería
+LTO:L1,1,Nivel 1 - Boletería
+LTO:L0,0,Nivel 1 - Calle y Andén
+LV:L0,0,Nivel 0 – Calle
+LV:L-1,-1,Nivel -1 – Servicios
+LV:L-2,-2,Nivel -2 – Andenes
+LVA:L0,0,Nivel 0 - Calle
+LVA:L-1,-1,Nivel -1 - Boletería
+LVA:L-2,-2,Nivel -2- Intermedio
+LVA:L-3,-3,Nivel -3- Andén
+MA:L0,0,Nivel 1 – Acceso / Calle
+MA:L1,1,Nivel 2 – Boletería
+MA:L2,2,Nivel 3 – Andenes
+MAC:L2,2,Nivel 2 - Andén
+MAC:L1,1,Nivel 1 - Mesanina
+MAC:L0,0,Nivel 0 - Calle
+MAT:L0,0,Nivel 0 – Calle
+MAT:L-1,-1,Nivel -1 – Boletería / Distribución
+MAT:L-2,-2,Nivel -2 – Intermedio
+MAT:L-3,-3,Nivel -3 – Andenes
+MEY:L0,0,Nivel 0 – Calle
+MEY:L-1,-1,Nivel -1 – Intermedio Peatonal
+MEY:L-2,-2,Nivel -2 – Servicios / Boletería
+MEY:L-3,-3,Nivel -3 – Intermedio Andenes / Cambio de Andén
+MEY:L-4,-4,Nivel -4 – Andenes
+MM:L0,0,Nivel 0 – Calle
+MM:L-1,-1,Nivel -1 – Boletería
+MM:L-2,-2,Nivel -2 – Andenes
+MQ:L0,0,Nivel 0 – Calle
+MQ:L-1,-1,Nivel -1 – Boletería
+MQ:L-2,-2,Nivel -2 – Andenes
+MT:L4,4,Nivel 4 – Intermedio
+MT:L3,3,Nivel 3 – Intermedio y Andenes
+MT:L2,2,Nivel 2 – Intermedio
+MT:L1,1,Nivel 1 – Calle y Boletería
+NP:L0,0,Nivel 0 – Calle
+NP:L-1,-1,Nivel -1 – Boletería
+NP:L-2,-2,Nivel -2 – Andenes
+NU:L2,2,Nivel 2 – Andenes L5
+NU-NUB:L1,1,Nivel 1 – Boletería L6 y L5
+NU-NUB:L0,0,Nivel 0 – Calle
+NUB:L-1,-1,Nivel -1 – Intermedio L6
+NUB:L-2,-2,Nivel -2 – Intermedio L6
+NUB:L-3,-3,Nivel -3 – Cambio de andén L6
+NUB:L-4,-4,Nivel -4 – Andenes L6
+NUN:L0,0,Nivel 0 – Calle / Acceso
+NUN:L-1,-1,Nivel -1 – Boletería / Servicios
+NUN:L-2,-2,Nivel -2 – Intermedio / Combinación
+NUN:L-3,-3,Nivel -3 – Andenes L6
+NUN:L-4,-4,Nivel -4 – Intermedio L3
+NUN:L-5,-5,Nivel -5 – Andenes L3
+OB:L0,0,Calle
+OB:L-1,-1,Servicios-Boleteria
+OB:L-2,-2,Anden
+PAC:L0,0,Nivel 0 - Calle
+PAC:L-1,-1,Nivel -1- Boletería
+PAC:L-2,-2,Nivel -2 - Intermedio (Puente)
+PAC:L-3,-3,Nivel -3 - Andén
+PAL:L0,0,Nivel 0 – Calle
+PAL:L-1,-1,Nivel -1 – Boletería / Distribución
+PAL:L-2,-2,Nivel -2 – Cambio de Andén / Intermedio
+PAL:L-3,-3,Nivel -3 – Andenes
+PB:L0,0,Nivel 0 – Calle
+PB:L-1,-1,Nivel -1 – Boletería
+PB:L-2,-2,Nivel -2 – Andenes
+PDG:L0,0,Nivel 0 – Calle
+PDG:L-1,-1,Nivel -1 – Mesanina
+PDG:L-2,-2,Nivel -2 – Andenes
+PE:L0,0,Nivel 1 – Acceso / Calle
+PE:L1,1,Nivel 2 – Boletería
+PE:L2,2,Nivel 3 – Andenes
+PEG-PZE:L0,0,Nivel 0 – Calle
+PZE:L-1,-1,Nivel -1 – Servicios L3
+PZE:L-2,-2,Nivel -2 – Intermedio L3 / Combinación L4
+PEG:L-2,-2,Nivel -2 – Boletería L4 / Combinación L3
+PZE:L-3,-3,Nivel -3 – Intermedio L3 / Combinación L4 Puente Alto
+PEG:L-3,-3,Nivel -3 – Andenes L4
+PZE:L-4,-4,Nivel -4 – Mesanina L3
+PZE:L-5,-5,Nivel -5 – Andenes L3
+PI:L0,0,Calle
+PI:L-1,-1,Boleteria
+PI:L-2,-2,Intermedio
+PI:L-3,-3,Anden
+PIN:L2,2,Nivel 2 - Andén
+PIN:L1,1,Nivel 1 - Boletería
+PIN:L0,0,Nivel 0 - Calle
+PJ:L0_ST,0,Nivel 0 – Calle
+PJ:L0_MZ,0,Nivel 0 – Boletería
+PJ:L-1,-1,Nivel -1 – Andenes
+PM:L0,0,Nivel 0 – Calle / Acceso A y B
+PM:L-1,-1,Nivel -1 – Boletería
+PM:L-2,-2,Nivel -2 – Intermedio
+PM:L-3,-3,Nivel -3 – Cambio de andén
+PM:L-4,-4,Nivel -4 – Andenes
+PPA:L0,0,Nivel 0 – Calle
+PPA:L-1,-1,Nivel -1 – Nivel galería
+PPA:L-2,-2,Nivel -2 – Servicios
+PPA:L-3,-3,Nivel -3 – Andenes
+PQ:L2,2,Andén
+PQ:L1,1,Boleteria
+PQ:L0,0,Calle
+PQU:L0,0,Nivel 0 – Calle
+PQU:L-1,-1,Nivel -1 – Servicios / Boletería
+PQU:L-2,-2,Nivel -2 – Andenes
+PR:L0,0,Nivel 0 – Calle / Acceso A
+PR:L-1,-1,Nivel -1 – Boletería
+PR:L-2,-2,Nivel -2 – Cambio de Andén
+PR:L-3,-3,Nivel -3 – Andenes
+PT:L0,0,Calle
+PT:L-1,-1,Boletería
+PT:L-2,-2,Andén
+PU:L0,0,Nivel 0 – Calle / Boletería 1
+PU:L-1,-1,Nivel -1 – Boletería 2 / Intermedio -1
+PU:L-2,-2,Nivel -2 – Intermedio -2
+PU:L-3,-3,Nivel -3 – Cambio de Andén / Intermedio -3
+PU:L-4,-4,Nivel -4 – Andenes
+PV:L0,0,Nivel 0 – Calle
+PV:L-1,-1,Nivel -1 – Boletería
+PV:L-2,-2,Nivel -2 – Andenes
+PZ-PZA:L0,0,Nivel 0 – Calle
+PZA:L0,0,Nivel 1 – Boletería L3
+PZ:L-1,-1,Nivel -1 – Boletería L5
+PZA:L-1,-1,Nivel -1 – Intermedio L3
+PZ:L-2,-2,Nivel -2 – Andenes L5
+PZA:L-2,-2,Nivel -2 – Intermedio L3
+PZA:L-3,-3,Nivel -3 – Mesanina L3 y Conexión L3-L5
+PZA:L-4,-4,Nivel -4 – Andenes L3
+PZC:L0,0,Nivel 0 – Calle
+PZC:L-1,-1,Nivel -1 – Intermedio 1
+PZC:L-2,-2,Nivel -2 – Boletería / Servicios
+PZC:L-3,-3,Nivel -3 – Intermedio 2 / Cambio de Andén
+PZC:L-4,-4,Nivel -4 – Andenes
+QN:L0,0,Nivel 0 – Calle / Accesos
+QN:L-1,-1,Nivel -1 | Boletería
+QN:L-2,-2,Nivel -2 | Andenes
+RA:L0,0,Nivel 1 – Acceso / Calle
+RA:L1,1,Nivel 2 – Boletería
+RA:L2,2,Nivel 3 – Andenes
+RC:L0,0,Nivel 0 – Calle
+RC:L-1,-1,Nivel -1 Boletería
+RC:L-2,-2,Nivel -2 Cambio de Andén
+RC:L-3,-3,Nivel -3 Andenes
+RGR:L0,0,Nivel 0 - Calle
+RGR:L-1,-1,Nivel -1 Rotonda y Boletería
+RGR:L-2,-2,Nivel -2 - Andén
+RMA:L2,2,Nivel 2 - Andén
+RMA:L1,1,Nivel 1 - Boletería
+RMA:L0,0,Nivel 0 - Calle
+RO:L0,0,Mesanina Nivel Calle
+RO:L-1,-1,Andén
+RP:L0,0,Nivel 0 – Calle
+RP:L-1,-1,Nivel -1 – Boletería
+RP:L-2,-2,Nivel -2 – Andenes
+RQU:L0,0,Nivel 0 - Calle
+RQU:L-1,-1,Nivel -1 - Boletería
+RQU:L-2,-2,Nivel -2 - Andén
+SA:L0,0,Nivel 0 – Calle
+SA:L-1,-1,Nivel -1 – Servicios
+SA:L-2,-2,Nivel -2 – Andenes
+SB:L0,0,Nivel 0 – Calle / Acceso A
+SB:L-1,-1,Nivel -1
+SB:L-2,-2,Nivel -2
+SB:L-3,-3,Nivel -3
+SB:L-4,-4,Nivel -4 – Cambio de Andén
+SB:L-5,-5,Nivel -5 – Andenes
+SBO:L0,0,Nivel 0 – Calle
+SBO:L-1,-1,Nivel -1 – Mesanina
+SBO:L-2,-2,Nivel -2 – Andenes
+SI:L0,0,Nivel 0 – Calle
+SI:L-1,-1,Nivel -1 – Boletería
+SI:L-2,-2,Nivel -2 – Andenes
+SJ:L0,0,Nivel Calle – Acceso / Calle
+SJ:L1,1,Nivel 1 – Boletería
+SJ:L2,2,Nivel 2 – Intermedio 2 / Distribución
+SJ:L3,3,Nivel 3 – Andenes
+SJE:L2,2,Nivel 2 - Andén
+SJE:L1,1,Nivel 1 - Boletería
+SJE:L0,0,Nivel 0 - Calle
+SJU:L1,1,Boleteria
+SJU:L0,0,Calle - Anden
+SL:L0,0,Nivel 0 – Calle
+SL:L-1,-1,Nivel -1 – Boletería
+SL:L-2,-2,Nivel -2 – Andenes
+SM:L0,0,Calle
+SM:L-1,-1,Boleteria
+SM:L-2,-2,Anden
+SP-SO:L0,0,Nivel 0 - Calle
+SP-SO:L-1,-1,Nivel -1- Boletería(L1) e Intermedio (L-5)
+SO:L-2,-2,Nivel -2- Puente de combinación
+SP:L-2,-2,Nivel -2- Andén L1
+SO:L-3,-3,Nivel -3- Andén L5
+SRA:L1,1,Boleteria
+SRA:L0,0,Calle - Anden
+SRO:L0,0,Calle
+SRO:L-1,-1,Boleteria
+SRO:L-2,-2,Anden
+TB-TOB:L0,0,Nivel 0 – Calle
+TB-TOB:L-1MESANINA,-1,Nivel -1 – Mesanina L1 y L4
+TB-TOB:L-2-ANDENL1,-2,Nivel -2 – Andenes L1
+TB-TOB:L-2-INTL4,-2,Nivel -2 – Intermedio L4
+TB-TOB:L-3-ANDENL4,-3,Nivel -3 – Andenes L4
+TB-TOB:L-3-ACCESOSMUT,-3,Nivel -3 – Accesos MUT
+TO:L0,0,"Calle, Boletería"
+TO:L-1,-1,Andén
+TRI:L2,2,Nivel 2 -Andén
+TRI:L1,1,Nivel 1 - Boletería
+TRI:L0,0,Nivel 0 - Calle
+UC:L0,0,Nivel 0 – Calle
+UC:L-1,-1,Nivel -1 – Boletería
+UC:L-2,-2,Nivel -2 – Andenes
+US:L0,0,Nivel 0 – Calle
+US:L-1,-1,Nivel -1 – Boletería
+US:L-2,-2,Nivel -2 – Andenes
+VFR:L0,0,Nivel 0 – Calle
+VFR:L-1,-1,Nivel -1 – Boletería / Control
+VFR:L-2,-2,Nivel -2 – Intermedio / Cambio de Andén
+VFR:L-3,-3,Nivel -3 – Andenes
+VIV:L0,0,Nivel 0
+VIV:L-1,-1,Nivel -1
+VIV:L-2,-2,Nivel -2
+VIV:L-3,-3,Nivel -3
+VMA-VIM:L0,0,Nivel 0 - Calle y Boletería
+VMA-VIM:L-1,-1,Nivel -1 - Andén L4A
+VMA-VIM:L-2,-2,Nivel -2 - Andén L4
+VVA-VV:L0,0,Nivel 0 - Calle
+VVA-VV:L-1,-1,Nivel -1 - Boletería
+VVA-VV:L-2,-2,Nivel -2 - Andén L4
+VVA-VV:L-3,-3,Nivel -3 - Puente de cambio de andén L5
+VVA-VV:L-4,-4,Nivel -4 - Andén L5
+ZA:L0,0,Calle
+ZA:L-1,-1,Boleteria
+ZA:L-2,-2,Anden

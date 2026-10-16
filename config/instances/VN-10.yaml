@@ -1,0 +1,18 @@
+# Subproblema VN-10: Vespucio Norte, bloque 14:30-16:00 (536 viajes). Ver docs/decisiones/instancias.md.
+# Los viajes se leen del CSV de la partición (con segundos), no del xlsx piloto (ver docs/decisiones/instancias.md).
+extends: ../particion.yaml
+
+case:
+  name: VN-10
+
+data:
+  source: subproblema
+  trips_file: data/processed/centroide/viajes_dia_habil.csv
+  block_id: VN-10
+  deadhead_file: data/interim/deadhead_VN-10.csv   # matriz del bloque (deadhead_time_min, deadhead_distance_km)
+
+deadhead_estimation:
+  trip_km_rule: mediana   # regla con que se generó deadhead_VN-10.csv (antes de adoptar "minimo"; docs/decisiones/instancias.md)
+
+battery:
+  soc_initial: 0.80   # supuesto simplificador para este subproblema (docs/decisiones/parametros.md)

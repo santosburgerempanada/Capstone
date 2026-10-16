@@ -1,0 +1,18 @@
+# Día hábil completo de Los Espinos y Santa Rosa juntos (31 568 viajes, 2 depósitos a ~1,1 km): cualquier bus de
+# cualquiera de los dos depósitos puede hacer cualquier viaje, como en VN-EC-dia.yaml. Lote 4b de
+# docs/planes/entrega_2.md: el par donde juntar debería rendir más (H9). Comparar contra LE-dia + SR-dia.
+extends: ../particion.yaml
+
+case:
+  name: LE-SR-dia
+
+data:
+  source: subproblema
+  trips_file: data/processed/centroide/viajes_dia_habil.csv
+  terminales: [Los Espinos, Santa Rosa]
+  deadhead_file: data/interim/deadhead_LE-SR.csv  # scripts/generar_deadheads.py --config config/instances/LE-SR-dia.yaml
+
+network:
+  day_start: "04:00"                 # los viajes que salen antes pasan al final del día (+24 h)
+
+# battery.soc_initial no se fija: vale soc_max, como en el paper (restricción (12)).

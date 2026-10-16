@@ -1,0 +1,36 @@
+# Costo de la partición medido de forma exacta (estrategia 2 de la sección 4b de docs/planes/entrega_2.md): 35 viajes al
+# azar de cada electroterminal (semilla 1), resueltos con el MILP por separado, de a pares y los cinco juntos. Todas las
+# instancias salen de la misma muestra: la de varios terminales es exactamente la unión de las de cada uno.
+# Se corre con: python scripts/costo_particion.py --config config/instances/particion-chica.yaml
+# Resultados: results/particion-chica/E1-x35-s1/<instancia>.json y resumen.json.
+extends: global-dia.yaml
+
+case:
+  name: particion-chica
+
+data:
+  muestra:
+    viajes_por_terminal: 35        # se bajó de 50 a 35 para acortar el MILP de los 5 juntos (2026-10-14)
+    semilla: 1
+
+solver:
+  time_limit_s: 3600                 # 1 h por MILP; si no llega al óptimo, se guardan la mejor solución y la cota de Gurobi
+  mip_gap: 0.0
+
+particion_chica:
+  experimento: E1-x35-s1
+  # En este orden, de la más chica a la más grande: cada resultado se guarda apenas termina.
+  instancias:
+    VN: [Vespucio Norte]
+    EC: [El Conquistador]
+    LE: [Los Espinos]
+    LR: [La Reina]
+    SR: [Santa Rosa]
+    VN-EC: [Vespucio Norte, El Conquistador]
+    LE-SR: [Los Espinos, Santa Rosa]
+    los-5: [Vespucio Norte, El Conquistador, Los Espinos, La Reina, Santa Rosa]
+  # Costo de la partición: cada conjunto contra sus partes resueltas por separado.
+  comparaciones:
+    VN-EC: [VN, EC]
+    LE-SR: [LE, SR]
+    los-5: [VN, EC, LE, LR, SR]

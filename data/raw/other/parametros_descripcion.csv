@@ -1,0 +1,45 @@
+﻿parametro,descripcion,unidad
+trip_id,Identificador único del viaje,-
+route_id,Identificador del recorrido RED asociado al viaje,-
+shape_id,Identificador de la geometría del recorrido,-
+start_time,Hora de inicio del viaje,hh:mm:ss
+end_time,Hora de término del viaje,hh:mm:ss
+start_stop,Paradero de inicio del viaje,-
+end_stop,Paradero final del viaje,-
+origin_lat,Latitud del punto inicial,grados
+origin_lon,Longitud del punto inicial,grados
+dest_lat,Latitud del punto final,grados
+dest_lon,Longitud del punto final,grados
+distance_km,Longitud total del recorrido del viaje,km
+duration_min,Duración programada del viaje,min
+energy_kwh,Energía requerida para ejecutar el viaje,kWh
+depot_id,Identificador del electroterminal,-
+nombre,Nombre del electroterminal,-
+lat,Latitud del electroterminal,grados
+lon,Longitud del electroterminal,grados
+capacity,Cantidad máxima de buses que puede albergar el electroterminal,buses
+num_chargers,Cantidad de cargadores disponibles,cargadores
+transformer_mw,Capacidad máxima de potencia disponible en el electroterminal,MW
+vehicle_type,Tipo de vehículo,-
+battery_kwh,Capacidad nominal de batería,kWh
+range_km,Autonomía máxima del vehículo,km
+charge_power_kw,Potencia máxima de carga,kW
+min_soc,Estado mínimo de carga permitido,%
+max_soc,Estado máximo de carga permitido,%
+deadhead_distance_km,Distancia recorrida sin pasajeros entre dos actividades,km
+deadhead_time_min,Tiempo requerido para desplazarse sin pasajeros,min
+pullout_km,Distancia desde el electroterminal al inicio del viaje,km
+pullout_time,Tiempo desde el electroterminal al inicio del viaje,min
+pullin_km,Distancia desde el final del viaje al electroterminal,km
+pullin_time,Tiempo desde el final del viaje al electroterminal,min
+charge_id,Identificador de actividad de carga,-
+start_hour,Inicio de la ventana de carga,hora
+end_hour,Fin de la ventana de carga,hora
+max_charges,Máximo número de buses que pueden cargarse simultáneamente,buses
+period_id,Identificador del bloque tarifario,-
+price_usd_kwh,Costo de la energía eléctrica,USD/kWh
+fleet_size,Tamaño máximo de la flota disponible,buses
+cost_per_km,Costo operacional por distancia recorrida,USD/km
+waiting_cost_per_min,Costo asociado al tiempo de espera,USD/min
+vehicle_fixed_cost,Costo fijo por utilizar un vehículo,USD/bus
+fixed_charge_cost,Costo fijo asociado a una actividad de carga,USD/carga
