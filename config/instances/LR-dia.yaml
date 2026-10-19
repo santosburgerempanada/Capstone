@@ -1,5 +1,3 @@
-# Día hábil completo (servicio L) del electroterminal La Reina: todos sus viajes (8 496).
-# Lote 4 de docs/planes/entrega_2.md (cada terminal por separado). Mismo formato que EC-dia.yaml.
 extends: ../particion.yaml
 
 case:
@@ -9,9 +7,7 @@ data:
   source: subproblema
   trips_file: data/processed/centroide/viajes_dia_habil.csv
   terminal: La Reina
-  deadhead_file: data/interim/deadhead_LR.csv   # scripts/generar_deadheads.py --config config/instances/LR-dia.yaml
+  deadhead_file: data/interim/deadhead_LR.csv
 
 network:
-  day_start: "04:00"                 # los viajes que salen antes pasan al final del día (+24 h)
-
-# battery.soc_initial no se fija: vale soc_max, como en el paper (restricción (12)).
+  day_start: "04:00"

@@ -1,13 +1,3 @@
-"""Costo de la partición medido de forma exacta en instancias chicas (estrategia 2 de la sección 4b de
-docs/planes/entrega_2.md).
-
-Resuelve con el MILP cada instancia de `particion_chica.instancias` (una muestra al azar de los viajes de cada terminal,
-`data.muestra`) y calcula la pérdida de cada conjunto contra sus partes por separado (`particion_chica.comparaciones`).
-
-Ejemplo: python scripts/costo_particion.py --config config/instances/particion-chica.yaml
-Guarda en results/<case.name>/<experimento>/: <instancia>.json (y _buses.csv) apenas termina cada MILP, y resumen.json
-al final. Con --solo se resuelven solo algunas instancias; el resumen usa los JSON que ya estén guardados."""
-
 import argparse
 import copy
 import json
@@ -24,8 +14,6 @@ from ebus.evaluation.resultados import (
 
 
 def instancias_de(cfg: dict) -> dict:
-    """Arma cada instancia de `particion_chica.instancias` con sus terminales y la muestra de la config. Comprueba que
-    cada conjunto de `comparaciones` tenga exactamente los viajes de sus partes: si no, la comparación no vale."""
     instancias = {}
     for nombre, terminales in cfg["particion_chica"]["instancias"].items():
         cfg_i = copy.deepcopy(cfg)

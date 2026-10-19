@@ -1,5 +1,3 @@
-"""Ensambla una `Instance` a partir de la configuración, desde datos reales o sintéticos."""
-
 from __future__ import annotations
 
 import pickle
@@ -11,8 +9,6 @@ from ebus.model.entities import Instance
 
 
 def build_instance(cfg: dict) -> Instance:
-    """Config → Instance. Fuentes implementadas: `data.source: synthetic` (`config/instances/toy.yaml`)
-    y `data.source: subproblema` (un bloque de la partición, `config/instances/VN-10.yaml`)."""
     data_cfg = cfg.get("data", {})
     battery_cfg = cfg.get("battery", {})
     consumo = {

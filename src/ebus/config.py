@@ -1,5 +1,3 @@
-"""Carga de configuración YAML con herencia mediante la clave `extends`."""
-
 from __future__ import annotations
 
 from pathlib import Path

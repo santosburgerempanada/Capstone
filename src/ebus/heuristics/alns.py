@@ -1,23 +1,3 @@
-"""Bucle principal del ALNS (Apéndice A, Tabla A1, y flujo de la Fig. 2 del paper), sobre la librería `alns`.
-
-Cada iteración: la ruleta elige un destroy y un repair (A.6); el destroy quita viajes; el repair los reinserta (con ajuste
-de SOC) y la post-reparación cubre los que no cupieron; la candidata se valida, se acepta o no según A.1 y, según el
-resultado, se actualizan los pesos de los operadores (A.7, A.8).
-
-Decisiones del equipo (ver docs/decisiones/alns.md):
-- **D1:** el ciclo es el de la librería `alns` (`ALNS.iterate`), con piezas propias: el estado (`EstadoAlns`), la ruleta
-  con reinicio de pesos cada 100 iteraciones (`RuletaConReinicio`) y el criterio de aceptación de A.1 (`AceptacionA1`).
-  El "repair" que ve la librería incluye la post-reparación y el cierre de la solución.
-- **D2a:** `Pr_accept` es el **factor de enfriamiento por iteración**: `T ← Pr_accept · T` (el paper no dice cómo baja la
-  temperatura; con `T` constante `Pr_accept` no tendría efecto, lo que contradice su Fig. 8).
-- **D2b:** la candidata se compara con la **mejor** solución encontrada, como en A.1.
-- **D3:** toda candidata se valida con `check_solution`. Si todas sus violaciones son de capacidad de estacionamiento, se
-  rechaza (objetivo infinito); cualquier otra violación es un bug y detiene el ALNS.
-- **Paso 7:** entre el repair y la post-reparación corre el ajuste de cargadores y potencia (`charger_power`), que deja
-  la candidata dentro de los límites de cada depósito; los viajes que quita van a la post-reparación junto con los que el
-  repair no insertó. (Reemplaza a la regla temporal D4, que rechazaba las candidatas que excedían los cargadores.)
-- **D5:** `N_max` iteraciones (15 000 en la config, como el paper)."""
-
 from __future__ import annotations
 
 import math
@@ -59,7 +39,6 @@ class AlnsParams:
 
     @classmethod
     def desde_config(cls, alns_cfg: dict) -> AlnsParams:
-        """Parámetros desde la sección `alns` de la config (los valores por defecto de la clase no se usan)."""
         return cls(
             max_iterations=alns_cfg["max_iterations"], destroy_max=alns_cfg["destroy_max"],
             accept_probability=alns_cfg["accept_probability"],
@@ -72,19 +51,15 @@ class AlnsParams:
 
 
 def initial_temperature(initial_cost: float, factor: float = 0.05) -> float:
-    """(A.2): T0 = -T_ini · 0.05 / ln 0.5."""
     return -initial_cost * factor / math.log(0.5)
 
 
 def acceptance_probability(best_cost: float, new_cost: float, temperature: float) -> float:
-    """(A.1): Pr = exp((f(x_b) - f(x_t)) / T)."""
     return math.exp((best_cost - new_cost) / temperature)
 
 
 @dataclass
 class EstadoAlns:
-    """Estado que maneja la librería. Tras un destroy guarda la solución destruida y los viajes quitados; tras el repair,
-    la solución completa y cuántos viajes quitó el ajuste de cargadores. `objective()` es el costo total."""
 
     solucion: Solution
     inst: Instance
@@ -102,9 +77,6 @@ class EstadoAlns:
 
 
 def _destroy_alns(operador: Callable, d_max: int, memoria: dict | None = None) -> Callable:
-    """Adapta un destroy a la librería. Con `memoria` (`{"iteracion", "mejor", "reinicio_cada"}`, compartida por todos
-    los destroy), cada `reinicio_cada` iteraciones destruye la mejor solución encontrada en vez de la actual (extensión,
-    no es del paper): una búsqueda que se alejó de la mejor vuelve a partir de ella (H23)."""
     def destroy(estado: EstadoAlns, rng: np.random.Generator, **_) -> EstadoAlns:
         base, desde_mejor = estado, False
         if memoria is not None:
@@ -118,8 +90,6 @@ def _destroy_alns(operador: Callable, d_max: int, memoria: dict | None = None) -
 
 
 def _repair_alns(operador: Callable, time_limit_s: float) -> Callable:
-    """Repair + ajuste de cargadores y potencia (Paso 7) + post-reparación + cierre, y la validación de cada candidata
-    (D3)."""
     def repair(estado: EstadoAlns, rng: np.random.Generator, **_) -> EstadoAlns:
         reparada, pendientes = operador(estado.solucion, estado.quitados, estado.inst, rng)
         ajustada, quitados = enforce_charging_resources(reparada, estado.inst, rng)
@@ -139,9 +109,6 @@ def _repair_alns(operador: Callable, time_limit_s: float) -> Callable:
 
 
 class AceptacionA1(AcceptanceCriterion):
-    """(A.1) con enfriamiento geométrico por iteración (D2a). Se acepta siempre una candidata igual o mejor que la mejor
-    encontrada; si no, con probabilidad `exp((f(x_b) − f(x_t)) / T)` (D2b: contra la mejor). Tras cada llamada (una por
-    iteración) `T ← factor · T`."""
 
     def __init__(self, temperatura_inicial: float, factor_enfriamiento: float):
         if temperatura_inicial <= 0 or not 0 < factor_enfriamiento <= 1:
@@ -161,9 +128,6 @@ class AceptacionA1(AcceptanceCriterion):
 
 
 class RuletaConReinicio(RouletteWheel):
-    """Ruleta de la librería (A.6; actualización `ρ ← decay·ρ + (1 − decay)·σ`, que con `decay = 1 − λ` es A.8) más el
-    reinicio de todos los pesos a 1 cada `reinicio_cada` iteraciones, como el paper. `al_actualizar` permite registrar
-    cada iteración."""
 
     def __init__(self, scores, decay: float, num_destroy: int, num_repair: int, reinicio_cada: int,
                  al_actualizar: Callable | None = None):
@@ -192,9 +156,6 @@ class ResultadoAlns:
 
 def run_alns(initial: Solution, inst: Instance, alns_cfg: dict, iteraciones: int | None = None,
              semilla: int | None = None) -> ResultadoAlns:
-    """Corre el ALNS desde `initial` (hoy, el baseline: decisión provisoria del equipo) con los parámetros de la sección
-    `alns` de la config; `iteraciones` y `semilla` reemplazan a `max_iterations` y `seed` si se dan. Devuelve la mejor
-    solución (completa y validada) y la historia de cada iteración."""
     params = AlnsParams.desde_config(alns_cfg)
     if iteraciones is not None:
         params.max_iterations = iteraciones

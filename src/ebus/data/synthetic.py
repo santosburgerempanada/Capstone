@@ -1,5 +1,3 @@
-"""Generador de instancias sintéticas para desarrollar y probar mientras no hay datos de Santiago."""
-
 from __future__ import annotations
 
 import math
@@ -11,13 +9,11 @@ from ebus.data.tariffs import tariff_from_blocks
 from ebus.model.entities import BusType, Depot, Instance, Tariff, Trip
 
 def _default_tariff() -> Tariff:
-    """Tarifa de `costs` en config/default.yaml (`tou_prices` y `overnight_price_per_kwh`)."""
     costs = load_config(DEFAULT_CONFIG_PATH)["costs"]
     return tariff_from_blocks(costs["tou_prices"], overnight_price=costs["overnight_price_per_kwh"])
 
 
 def _default_deadhead_cost_per_km(deadhead_cost_per_km: float | None) -> float:
-    """Costo de deadhead por km: el explícito, o `costs.deadhead_cost_per_km` de config/default.yaml."""
     if deadhead_cost_per_km is not None:
         return deadhead_cost_per_km
     return load_config(DEFAULT_CONFIG_PATH)["costs"]["deadhead_cost_per_km"]
@@ -26,8 +22,6 @@ def _default_deadhead_cost_per_km(deadhead_cost_per_km: float | None) -> float:
 def _default_bus_type(
     consumption_kwh_per_km: float | None = None, deadhead_consumption_factor: float | None = None
 ) -> BusType:
-    """Tipo 1 de la Tabla 6 del paper (batería y carga). El consumo sale de `battery` y el costo fijo por bus de
-    `costs.vehicle_fixed_cost` en config/default.yaml, salvo que el consumo se pase explícito."""
     cfg = load_config(DEFAULT_CONFIG_PATH)
     battery_cfg = cfg["battery"]
     if consumption_kwh_per_km is None:
@@ -45,8 +39,6 @@ def _default_bus_type(
 def _deadhead_matrix(
     coords: dict[str, tuple[float, float]], speed_kmh: float = 20.0, detour_factor: float = 1.3
 ) -> tuple[dict[tuple[str, str], int], dict[tuple[str, str], float]]:
-    """d_ij euclidiano: distancia en el plano × factor de desvío / velocidad. Devuelve
-    (minutos, km) por par ordenado."""
     matrix: dict[tuple[str, str], int] = {}
     km_matrix: dict[tuple[str, str], float] = {}
     for i, (xi, yi) in coords.items():
@@ -65,17 +57,6 @@ def paper_figure1_instance(
     soc_initial: float | None = None,
     deadhead_cost_per_km: float | None = None,
 ) -> Instance:
-    """Instancia inspirada en la Fig. 1 del paper: 3 viajes, 4 estaciones, 1 depósito.
-
-    T1 termina en S2 y T3 empieza en S2 con holgura suficiente -> conectables (igual que la
-    conexión verde punteada de la figura). T2 empieza en S4; la distancia de S2 a S4 excede
-    la holgura entre el fin de T1 y el inicio de T2 -> no conectables (igual que en la figura).
-
-    Nota: no tenemos la imagen del paper, solo el texto de la leyenda, así que las coordenadas
-    y horarios son una reconstrucción razonable de esa descripción, no una copia exacta de la
-    figura. Sirve para probar `model/network.py` y los métodos de solución con una instancia
-    mínima y legible a mano.
-    """
     coords = {
         "D1": (0.0, 0.0),
         "S1": (1.0, 0.0),
@@ -122,12 +103,6 @@ def generate_instance(
     battery_kwh: float | None = None,
     n_chargers: int | None = None,
 ) -> Instance:
-    """Itinerario aleatorio con estaciones en un plano, d_ij euclidiano y la tarifa por defecto
-    del paper. Útil para probar con más viajes que la instancia de la Fig. 1 sin depender de
-    datos reales.
-
-    `battery_kwh` y `n_chargers` permiten armar instancias que obliguen a cargar (batería chica) y
-    que hagan pesar el límite de cargadores; `None` deja los valores por defecto."""
     rng = random.Random(seed)
     start, end = horizon
 

@@ -1,10 +1,5 @@
-# Día completo de Vespucio Norte con el destroy vaciar_bus (vacía un bus de cualquier largo) además de los tres del
-# paper. Igual que VN-dia.yaml en todo lo demás. Corridas: results/VN-dia/E4-destroy-bus/vaciar_s<semilla>.*
-# (lote 2 de docs/planes/entrega_2.md). Variante para experimentar: no se adopta por defecto mientras no se decida.
-# Fija los operadores y el reinicio que tenía config/default.yaml cuando se corrió (antes del 2026-10-14, H25), para que
-# siga reproduciendo sus corridas.
 extends: VN-dia.yaml
 
 alns:
   operadores_destroy: [random, worst, similarity, vaciar_bus]
-  reinicio_mejor_cada: 0         # nunca (null no reemplaza el valor del default)
+  reinicio_mejor_cada: 0

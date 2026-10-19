@@ -1,6 +1,3 @@
-"""Particiona los datos crudos en subproblemas y los guarda en data/processed/<particion>/."""
-
-
 import argparse
 
 from ebus.config import load_config

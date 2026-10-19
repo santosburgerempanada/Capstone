@@ -1,5 +1,3 @@
-"""Matriz de deadheads d_ij entre paraderos y depósitos (Paso II): lectura y estimación."""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -15,10 +13,6 @@ REGLA_MEDIANA = "mediana"
 def load_deadhead_matrix(
     path: str | Path,
 ) -> tuple[dict[tuple[str, str], int], dict[tuple[str, str], float]]:
-    """Lee la matriz de deadheads (ver docs/datos/datos_requeridos.md) y devuelve
-    (`deadhead_time_min`, `deadhead_distance_km`) por par `(from_id, to_id)`, como los espera
-    `Instance.deadhead_min` y `Instance.deadhead_km`. Las columnas `energy_kwh` y `cost_usd` se
-    ignoran: la energía y el costo se calculan desde la config."""
     df = pd.read_csv(path, dtype={"from_id": str, "to_id": str})
     faltan = {"from_id", "to_id", "deadhead_time_min", "deadhead_distance_km"} - set(df.columns)
     if faltan:
@@ -34,8 +28,6 @@ def load_deadhead_matrix(
 
 
 def pares_faltantes(minutos: dict[tuple[str, str], int], nodos: set[str]) -> list[tuple[str, str]]:
-    """Pares ordenados `(i, j)`, `i != j`, de `nodos` que no están en la matriz (orden alfabético).
-    Una matriz completa y dirigida devuelve `[]`."""
     return [(i, j) for i in sorted(nodos) for j in sorted(nodos) if i != j and (i, j) not in minutos]
 
 
@@ -48,23 +40,6 @@ def estimar_matriz_deadheads(
     costo_por_km: float,
     regla_km_viaje: str = REGLA_MINIMO,
 ) -> pd.DataFrame:
-    """Matriz de deadheads completa y dirigida entre los paraderos de `viajes` y los `depositos` (incluidos los pares
-    depósito ↔ depósito, con `tipo = deadhead`: un bus puede salir de uno y cargar en otro), con el método de
-    docs/decisiones/datos.md ("Matriz de deadheads de VN-10"). Reemplazar por ruteo en red vial (OSM) si hay tiempo.
-
-    - `km`: haversine × `factor_desvio`, corregido con los `km` de los viajes de `viajes` que tienen el mismo par
-      (origen, destino), según `regla_km_viaje` (`deadhead_estimation.trip_km_rule` en la config):
-      - `"minimo"` (por defecto): el menor entre la estimación y los `km` de esos viajes. Un bus siempre puede seguir el
-        recorrido de un viaje, así que esos km son una cota, no una obligación; en recorridos casi circulares (origen y
-        destino a metros, viaje de 20 km) el deadhead no da la vuelta (docs/decisiones/instancias.md, "Día completo de un
-        electroterminal").
-      - `"mediana"`: la mediana de los `km` de esos viajes. Es la regla con que se generó `deadhead_VN-10.csv`.
-    - `minutos`: `km / velocidad_kmh × 60`, redondeado, mínimo 1.
-    - `energy_kwh` = `km × kwh_por_km` y `cost_usd` = `km × costo_por_km` (informativas: `load_deadhead_matrix` las
-      ignora).
-
-    `viajes` trae las columnas de `viajes_dia_habil.csv` (`stop_origen`, `lat_origen`, `lon_origen`, `stop_destino`,
-    `lat_destino`, `lon_destino`, `km`). Devuelve las columnas del diccionario, ordenadas por (`from_id`, `to_id`)."""
     if viajes.empty:
         raise ValueError("No hay viajes con que estimar la matriz de deadheads")
     if velocidad_kmh <= 0 or factor_desvio <= 0:

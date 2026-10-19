@@ -1,10 +1,3 @@
-"""Sensibilidad del ALNS a `destroy_max` y `accept_probability` (valores de config/experiments.yaml, sección
-`sensitivity`), un parámetro a la vez, partiendo del baseline. Es un experimento: escribe
-results/<instancia>/<experimento>/sensibilidad.csv (una fila por corrida) y sensibilidad_resumen.csv.
-
-Ejemplo: python scripts/sensibilidad.py --config config/instances/toy_carga.yaml --experimento E1-sensibilidad
-         --iteraciones 3000 --semillas 3"""
-
 import argparse
 from pathlib import Path
 

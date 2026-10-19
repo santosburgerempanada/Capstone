@@ -1,29 +1,21 @@
-# Parámetros por defecto, tomados de Jia & An (2025). Cada caso (santiago.yaml, instances/*.yaml)
-# sobrescribe solo lo que necesita.
-
 network:
-  time_step_min: 15           # intervalo entre nodos de espera/carga (Paso IV)
-  horizon_start: "04:30"      # T0: inicio de operación
-  horizon_end: "23:30"        # T-1: fin de operación
-  # Subproblemas de la partición: el horizonte se calcula desde los datos, no se lee de aquí.
-  # T0 = inicio del bloque − margen; T-1 = última llegada + margen (ver data/horizonte.py).
-  horizon_margin: max_deadhead   # "max_deadhead" (deadhead más largo de la matriz) o minutos fijos
+  time_step_min: 15
+  horizon_start: "04:30"
+  horizon_end: "23:30"
+  horizon_margin: max_deadhead
 
 battery:
-  soc_max: 1.00               # 100 %
-  soc_min: 0.10               # 10 %: datos del bus (bus_types.csv); el paper usa 0.20 (ver docs/decisiones/parametros.md)
-  soc_initial: null           # SOC con que parte cada bus; null = soc_max (restricción (12) del paper)
-  consumption_kwh_per_km: 1.4         # consumo con pasajeros (decisión del equipo; el paper usa 1.8, NREL [38])
-  deadhead_consumption_factor: 0.8    # consumo en deadhead = factor × consumption_kwh_per_km (1.12 kWh/km)
+  soc_max: 1.00
+  soc_min: 0.10
+  soc_initial: null
+  consumption_kwh_per_km: 1.4
+  deadhead_consumption_factor: 0.8
 
-# Costos en USD, con los datos de Santiago. Las instancias reales leen la tarifa diurna de data/raw/tariffs/electricity_prices.csv
-# y el costo fijo por bus de data/raw/other/parameters.csv; las sintéticas (toy, toy_carga) usan los valores de aquí.
 costs:
   currency: USD
-  deadhead_cost_per_km: 0.5       # e_d: cost_per_km de data/raw/other/parameters.csv
-  overnight_price_per_kwh: 0.10   # e_c^0: el mínimo de electricity_prices.csv (P1)
-  vehicle_fixed_cost: 250         # e_f: vehicle_fixed_cost de data/raw/other/parameters.csv
-  # Tarifa horaria para carga diurna e_c^t: los bloques de data/raw/tariffs/electricity_prices.csv
+  deadhead_cost_per_km: 0.5
+  overnight_price_per_kwh: 0.10
+  vehicle_fixed_cost: 250
   tou_prices:
     - {start: "00:00", end: "08:00", price: 0.10}
     - {start: "08:00", end: "14:00", price: 0.15}
@@ -34,49 +26,45 @@ costs:
 
 initial_solution:
   use_preconnection: true
-  T_tc_min: 20                # umbral de pre-conexión de viajes
-  N_p: 3                      # máx. pares conectables por sub-cadena
-  k_sucesores: null           # conexiones directas a los K primeros sucesores (decisión G); null = sin recorte. Se fija midiendo
-  time_limit_s: null          # límite de Gurobi para cada modelo de un bus; null = sin límite. Se fija midiendo
+  T_tc_min: 20
+  N_p: 3
+  k_sucesores: null
+  time_limit_s: null
 
 alns:
-  max_iterations: 15000       # N_max
-  destroy_max: 5              # D_max (Tabla 9: 5 es el mejor compromiso calidad/tiempo)
-  accept_probability: 0.99    # Pr_accept (Fig. 8: 0.99 da el menor costo)
-  initial_temperature_factor: 0.05   # T0 = -T_ini * 0.05 / ln(0.5), ec. (A.2)
-  reaction_factor: 0.5        # lambda, ec. (A.8)
-  scores: [3, 2, 1, 0]        # omega_1..omega_4, ec. (A.7)
+  max_iterations: 15000
+  destroy_max: 5
+  accept_probability: 0.99
+  initial_temperature_factor: 0.05
+  reaction_factor: 0.5
+  scores: [3, 2, 1, 0]
   weight_reset_every: 100
   regret_p: 2
   worst_destroy:
-    L_min: 2                  # largo mínimo de cadena antes de eliminarla completa
-    T_max_min: 60             # umbral de tiempo de conexión "malo"
+    L_min: 2
+    T_max_min: 60
   similarity_destroy:
-    power_factor: 3           # p en la selección r^p
+    power_factor: 3
   post_repair:
-    time_limit_s: 30          # límite de Gurobi para la post-reparación (modelo chico: los viajes pendientes)
-  # Operadores activos (por nombre). Los del paper: destroy random, worst y similarity; repair greedy y regret.
-  # Extensiones (no son del paper; docs/decisiones/alns.md): destroy chain, string, cluster y vaciar_bus; repair greedy_noise.
-  # Por defecto, los del paper más vaciar_bus (configuración definitiva de la entrega 2, hallazgos H25).
+    time_limit_s: 30
   operadores_destroy: [random, worst, similarity, vaciar_bus]
   operadores_repair: [greedy, regret]
-  # Parámetros de las extensiones. Los de chain, string, cluster y greedy_noise son los valores con que las programó Yusolis.
   chain_destroy:
-    budget_factor: 2          # puede quitar hasta budget_factor * D_max viajes para vaciar cadenas cortas enteras
-    bias: 3                   # elige la cadena en el percentil r^bias de las ordenadas por largo (sesgo a las cortas)
+    budget_factor: 2
+    bias: 3
   string_destroy:
-    l_max: 4                  # largo máximo de cada tramo consecutivo de viajes que quita
+    l_max: 4
   cluster_destroy:
-    w_station: 20.0           # penalización (min) por otro terminal de origen en la relación con la semilla
-    w_line: 10.0              # penalización (min) por otra línea
+    w_station: 20.0
+    w_line: 10.0
   greedy_noise_repair:
-    noise: 0.15               # ruido relativo en el costo con que elige cada inserción
+    noise: 0.15
   vaciar_bus:
-    bias: 3                   # elige el bus en el percentil r^bias de los ordenados por viajes (sesgo a los de menos viajes)
-  reinicio_mejor_cada: 500    # cada N iteraciones el destroy parte de la mejor solución, no de la actual; 0 o null = nunca (H25)
+    bias: 3
+  reinicio_mejor_cada: 500
   seed: 42
 
 solver:
   name: gurobi
-  time_limit_s: 14400         # 4 h, como en el paper
+  time_limit_s: 14400
   mip_gap: 0.0

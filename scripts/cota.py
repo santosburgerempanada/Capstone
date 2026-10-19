@@ -1,10 +1,3 @@
-"""Calcula la cota inferior de flota y de costo de una instancia y la guarda en results/<instancia>/cota.json
-(estrategia 1 del costo de la partición, sección 4b de docs/planes/entrega_2.md).
-
-Ejemplo: python scripts/cota.py --config config/instances/VN-dia.yaml
-La cota de flota con deadheads tarda segundos en VN-10, minutos en un terminal y más en las instancias de varios
-terminales (38 min en VN-EC-dia)."""
-
 import argparse
 import json
 import time

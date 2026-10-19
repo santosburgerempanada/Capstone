@@ -1,24 +1,3 @@
-"""Sub-rutina de ajuste de SOC integrada en repair (Sección 3.2.1, Tablas 3 y 4 del paper).
-
-Insertar un viaje `c` entre dos viajes `a` y `b` de una cadena exige que el bus llegue a tiempo y que la batería no baje
-de `soc_min` en ningún punto: en `c`, en los viajes siguientes, al llegar a cargar y al volver al depósito. Si no alcanza,
-se busca dónde cargar (`recharge_opportunity`). `adjust_for_insertion` es el punto de entrada que usa el repair.
-
-Decisiones del equipo (ver docs/decisiones/alns.md):
-- **Fórmulas y simulación.** Las fórmulas del paper (`clasificar_insercion`) clasifican el caso (I o II) y el escenario
-  (S1, S2, S3); la simulación (`recompute_soc` y `evaluar_cadena`, con nuestra dinámica exacta) confirma siempre. Ninguna
-  cadena sale de aquí sin haber recalculado su batería completa.
-- **Cargadores y potencia del depósito NO se revisan aquí**, como en el paper: se relajan en el repair y los corrige después
-  el ajuste de cargadores y potencia (Paso 7). Solo se respeta la potencia máxima de carga del bus y la del depósito.
-- **"Cargar en el intervalo actual"**: primero antes de `c`; si no se puede, después de `c`.
-- **Se carga solo lo necesario**, a la máxima potencia disponible, en minutos enteros redondeados hacia arriba y desde que
-  el bus llega al depósito.
-- `recharge_opportunity` devuelve la cadena modificada (puede extender una carga existente o agregar una nueva).
-- No se carga antes del primer viaje (restricción (13)); la energía del retorno al depósito cuenta.
-
-Notación del paper: `a2` = SOC tras `a`; `b1` = SOC antes de `b`; `E_c` = consumo de `c`; `E_lowest` = SOC mínimo desde `b`
-(incluido el regreso al depósito). Si `c` va primero, `a` es el depósito de salida; si va último, `b` es el de retorno."""
-
 from __future__ import annotations
 
 import math
@@ -40,24 +19,11 @@ def _e_deadhead(inst: Instance, i: str, j: str) -> float:
 
 
 def energy_needed(origen: str, c: Trip, destino: str, inst: Instance) -> float:
-    """`E_need = E_c + E(d_ac) + E(d_cb)` en fracción de batería: el viaje `c` más los deadheads desde `origen` (donde
-    termina `a`, o el depósito de salida si `c` va primero) y hasta `destino` (donde empieza `b`, o el depósito de retorno
-    si `c` va último)."""
     return trip_energy_soc(c, inst.bus_type) + _e_deadhead(inst, origen, c.start_station) + _e_deadhead(
         inst, c.end_station, destino)
 
 
 def recompute_soc(chain: TripChain, inst: Instance) -> None:
-    """Recalcula `soc_before` y `soc_after` de toda la cadena, en el lugar (tras destroy o cambios de carga).
-
-    Parte de `inst.soc_initial` en el depósito de salida y recorre los viajes en orden: si hay una carga antes del
-    viaje, descuenta la ida al depósito de carga y suma lo cargado (`potencia × duración / batería`, con tope en
-    `soc_max`; si hay varios segmentos en el intervalo, los aplica en orden); luego descuenta el deadhead hasta el inicio
-    del viaje (`soc_before`) y el viaje (`soc_after`).
-
-    Solo calcula: **no corrige** un SOC que baje de `soc_min` (eso lo detecta el ajuste de SOC o el validador) y no
-    mira los horarios de las cargas. El SOC al llegar al depósito al final del día no entra aquí: lo da
-    `model/cost.py::soc_at_return`. Una cadena sin viajes queda con las listas vacías."""
     bus = inst.bus_type
     soc = inst.soc_initial
     ubicacion = chain.depot_id
@@ -82,12 +48,6 @@ def _retorno(chain: TripChain) -> str:
 
 
 def evaluar_cadena(chain: TripChain, inst: Instance) -> tuple[float, bool]:
-    """Recorre la cadena completa y devuelve `(SOC mínimo, ¿horarios factibles?)`.
-
-    El SOC mínimo considera cada punto donde la batería puede tocar fondo: al llegar a cada carga, antes y después de cada
-    viaje, y al volver al depósito. Los horarios exigen llegar a tiempo a cada carga y a cada viaje, volver antes del fin del
-    horizonte, y no cargar antes del primer viaje (restricción (13)). **No** revisa los límites de cargadores y potencia del
-    depósito compartidos con otros buses (ver el docstring del módulo)."""
     bus = inst.bus_type
     soc, lugar, t = inst.soc_initial, chain.depot_id, inst.horizon_start
     minimo, ok = soc, True
@@ -120,13 +80,11 @@ def evaluar_cadena(chain: TripChain, inst: Instance) -> tuple[float, bool]:
 
 
 def es_factible(chain: TripChain, inst: Instance) -> bool:
-    """La cadena llega a tiempo a todo y su batería nunca baja de `soc_min` (ver `evaluar_cadena`)."""
     minimo, ok = evaluar_cadena(chain, inst)
     return ok and minimo >= inst.soc_min - _EPS
 
 
 def _soc_al_volver(chain: TripChain, inst: Instance) -> float:
-    """SOC al llegar al depósito de retorno (con la carga final, si la hay). Supone el SOC de la cadena al día."""
     bus = inst.bus_type
     if not chain.trips:
         return inst.soc_initial - _e_deadhead(inst, chain.depot_id, _retorno(chain))
@@ -139,15 +97,10 @@ def _soc_al_volver(chain: TripChain, inst: Instance) -> float:
 
 
 def _tiene_carga(chain: TripChain, k: int) -> bool:
-    """El intervalo `k` tiene al menos un segmento que carga (un marcador sin potencia ni duración no cuenta)."""
     return any(e.power_kw > 0 and e.duration > 0 for e in recharge_events(chain, k))
 
 
 def _insertar(chain: TripChain, pos: int, c: Trip, inst: Instance, quitar_cargas: bool = False) -> TripChain:
-    """Copia de la cadena con `c` en la posición `pos` y el SOC recalculado.
-
-    Las cargas del intervalo donde entra `c` quedan antes o después de `c` según su horario; las que chocan con `c` se
-    descartan. Con `quitar_cargas=True` se descartan todas las de ese intervalo (Caso II, S1)."""
     nueva = chain.copy()
     recargas = {}
     for k, eventos in nueva.recharges.items():
@@ -173,15 +126,6 @@ def _insertar(chain: TripChain, pos: int, c: Trip, inst: Instance, quitar_cargas
 
 
 def clasificar_insercion(chain: TripChain, pos: int, c: Trip, inst: Instance) -> tuple[str, str, float]:
-    """Caso, escenario y déficit (en fracción de batería) según las fórmulas de las Tablas 3 y 4.
-
-    - Caso I (sin carga entre `a` y `b`): `E_add = E_need + (b1 − a2)` y `E_available = E_lowest − soc_min`.
-      S1 si `E_add <= 0`; S2 si `E_available >= E_add`; S3 si no, con déficit `E_add − E_available`.
-    - Caso II (con carga entre `a` y `b`): `E_available = E_lowest − soc_min − (b1 − a2)`. S1 si `E_available >= E_need`
-      (la carga ya no hace falta); S2 si no, con déficit `E_need − E_available`.
-
-    `b1 − a2` descuenta el deadhead directo `a → b` que la inserción reemplaza (en el Caso I, `a2 − b1` es justamente esa
-    energía). El caso se decide por la presencia de cargas en el intervalo, que equivale a comparar `a2` con `b1`."""
     base = chain.copy()
     recompute_soc(base, inst)
     n = len(base.trips)
@@ -211,22 +155,17 @@ def clasificar_insercion(chain: TripChain, pos: int, c: Trip, inst: Instance) ->
 
 
 def _potencia(inst: Instance, depot_id: str) -> float:
-    """Máxima potencia de carga para un bus: la del bus, sin pasar de la del depósito (no se miran otros buses)."""
     deposito = next(d for d in inst.depots if d.id == depot_id)
     return min(inst.bus_type.max_charge_kw, deposito.power_kw)
 
 
 def _siguiente(chain: TripChain, k: int, inst: Instance) -> tuple[str, int]:
-    """Dónde y cuándo debe estar el bus al terminar el intervalo `k`: el inicio del viaje `k`, o el depósito de retorno
-    al fin del horizonte si `k` es el intervalo final."""
     if k < len(chain.trips):
         return chain.trips[k].start_station, chain.trips[k].start_time
     return _retorno(chain), inst.horizon_end
 
 
 def _con_carga_nueva(chain: TripChain, k: int, minutos: int, inst: Instance) -> TripChain | None:
-    """Agrega una visita nueva al depósito más cercano en el intervalo `k` (entre los viajes `k−1` y `k`), con `minutos`
-    de carga desde que el bus llega. `None` si no cabe en la holgura."""
     if minutos <= 0:
         return None
     previo = chain.trips[k - 1]
@@ -242,8 +181,6 @@ def _con_carga_nueva(chain: TripChain, k: int, minutos: int, inst: Instance) -> 
 
 
 def _con_carga_extendida(chain: TripChain, k: int, minutos: int, inst: Instance) -> TripChain | None:
-    """Extiende `minutos` el último segmento del intervalo `k`. Si es un marcador de visita sin carga, pasa a cargar desde
-    su inicio. `None` si ya no alcanza a llegar a tiempo al viaje siguiente (o a volver al depósito)."""
     if minutos <= 0:
         return None
     nueva = chain.copy()
@@ -265,9 +202,6 @@ def _con_carga_extendida(chain: TripChain, k: int, minutos: int, inst: Instance)
 
 def _ajustar(construir: Callable[[int], TripChain | None], potencia: float, deficit: float,
              inst: Instance) -> TripChain | None:
-    """Busca los minutos de carga justos: parte de los minutos que cubren `deficit` a `potencia` y, si la simulación
-    todavía muestra un SOC bajo el mínimo, agrega los minutos que faltan. Se rinde si la carga ya no cabe en la holgura,
-    si los horarios dejan de ser factibles o tras `_MAX_AJUSTES` vueltas (p. ej., si el déficit ocurre antes de la carga)."""
     bateria = inst.bus_type.battery_kwh
     minutos = max(1, math.ceil(deficit * bateria / potencia * 60 - _EPS))
     for _ in range(_MAX_AJUSTES):
@@ -284,7 +218,6 @@ def _ajustar(construir: Callable[[int], TripChain | None], potencia: float, defi
 
 
 def _intentar_extender(chain: TripChain, k: int, deficit: float, inst: Instance) -> TripChain | None:
-    """Carga más extendiendo la visita al depósito que ya existe en el intervalo `k`."""
     if not 1 <= k <= len(chain.trips) or not recharge_events(chain, k):
         return None
     ultimo = recharge_events(chain, k)[-1]
@@ -293,8 +226,6 @@ def _intentar_extender(chain: TripChain, k: int, deficit: float, inst: Instance)
 
 
 def _intentar_nueva(chain: TripChain, k: int, deficit: float, inst: Instance) -> TripChain | None:
-    """Carga en una visita nueva al depósito en el intervalo `k`, que no debe tener visitas. El déficit se amplía con la
-    energía extra del desvío al depósito."""
     if not 1 <= k <= len(chain.trips) or recharge_events(chain, k):
         return None
     previo = chain.trips[k - 1]
@@ -307,15 +238,6 @@ def _intentar_nueva(chain: TripChain, k: int, deficit: float, inst: Instance) ->
 
 
 def recharge_opportunity(chain: TripChain, pos: int, deficit: float, inst: Instance) -> TripChain | None:
-    """Agrega carga a una cadena que ya contiene a `c` en la posición `pos` y le falta `deficit` de batería.
-
-    Prueba, en el orden del paper, y devuelve la primera cadena factible (o `None`):
-    1. extender una carga del intervalo anterior a `c`;
-    2. cargar en el intervalo actual, en el depósito más cercano: primero antes de `c`, luego después de `c`
-       (extendiendo una visita que ya esté ahí, o con una nueva);
-    3. extender visitas al depósito de intervalos anteriores, del más cercano a `c` al más lejano;
-    4. crear una visita nueva en intervalos anteriores sin visitas y, si no, en los posteriores.
-    Nunca carga antes del primer viaje (restricción (13)). La cantidad la afina `_ajustar` simulando."""
     n = len(chain.trips)
     deficit = max(deficit, 0.0)
     intentos = [lambda: _intentar_extender(chain, pos, deficit, inst),
@@ -333,9 +255,6 @@ def recharge_opportunity(chain: TripChain, pos: int, deficit: float, inst: Insta
 
 
 def adjust_case_one(chain: TripChain, pos: int, c: Trip, inst: Instance) -> TripChain | None:
-    """Caso I (sin carga entre `a` y `b`), Tabla 3. S1 y S2: `c` entra sin cargar. S3: hace falta cargar
-    (`recharge_opportunity`). La simulación decide: si las fórmulas dicen S3 pero la batería alcanza (p. ej., porque una
-    carga posterior llega igual al tope), se inserta sin cargar."""
     candidata = _insertar(chain, pos, c, inst)
     minimo, horarios_ok = evaluar_cadena(candidata, inst)
     if not horarios_ok:
@@ -346,9 +265,6 @@ def adjust_case_one(chain: TripChain, pos: int, c: Trip, inst: Instance) -> Trip
 
 
 def adjust_case_two(chain: TripChain, pos: int, c: Trip, inst: Instance) -> TripChain | None:
-    """Caso II (había carga entre `a` y `b`), Tabla 4. S1: si sin esa carga igual alcanza, se elimina. S2: si no, se
-    conservan los segmentos que siguen cabiendo antes o después de `c` y se carga más, priorizando extender esos segmentos;
-    si no basta, `recharge_opportunity` desde el paso 1."""
     sin_carga = _insertar(chain, pos, c, inst, quitar_cargas=True)
     if es_factible(sin_carga, inst):
         return sin_carga
@@ -367,12 +283,6 @@ def adjust_case_two(chain: TripChain, pos: int, c: Trip, inst: Instance) -> Trip
 
 
 def adjust_for_insertion(chain: TripChain, pos: int, c: Trip, inst: Instance) -> TripChain | None:
-    """Cadena nueva con `c` insertado en la posición `pos` (entre `trips[pos−1]` y `trips[pos]`), con su SOC y sus cargas
-    ajustados, o `None` si no se puede. No modifica `chain`.
-
-    Primero descarta rápido lo imposible por tiempo (si `c` no cabe entre `a` y `b` ni siquiera sin cargar, ninguna carga lo
-    arregla). Después las fórmulas del paper (`clasificar_insercion`) eligen el caso (I o II) y predicen el escenario; la
-    simulación decide el resultado, y `contador_escenarios` registra si confirmó o corrigió la predicción."""
     n = len(chain.trips)
     if not 0 <= pos <= n:
         raise ValueError(f"posición {pos} fuera de la cadena de {n} viajes")

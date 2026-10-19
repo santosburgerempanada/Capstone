@@ -1,7 +1,3 @@
-"""Construye la `Instance` de un subproblema de la partición (un electroterminal y un bloque
-horario, o el día completo de un electroterminal) a partir de los CSV de `data/`. Ver docs/decisiones/instancias.md,
-docs/planes/plan_de_accion.md (Fase 2) y docs/planes/cerrados/plan_dia_completo_vn.md."""
-
 from __future__ import annotations
 
 import zlib
@@ -30,7 +26,6 @@ _SEGUNDOS_DIA = 24 * 3600
 
 
 def _ruta(texto: str | Path) -> Path:
-    """Las rutas relativas de la config se resuelven desde la raíz del proyecto."""
     ruta = Path(texto)
     return ruta if ruta.is_absolute() else RAIZ / ruta
 
@@ -43,18 +38,6 @@ def _requerido(seccion: dict, clave: str, donde: str):
 
 
 def leer_viajes(cfg: dict) -> tuple[pd.DataFrame, list[str], int]:
-    """Viajes de la instancia, desde `data.trips_file`. Devuelve (viajes, terminales, inicio en minutos).
-
-    La instancia se elige con una de tres claves de `data` (exactamente una):
-    - `block_id`: un bloque de la partición (p. ej. VN-10). El inicio es el de ese bloque (`bloque_ini`).
-    - `terminal`: todos los viajes del día de un electroterminal (p. ej. "Vespucio Norte").
-    - `terminales`: todos los viajes del día de varios electroterminales, con sus depósitos (p. ej. Vespucio Norte y El
-      Conquistador; ver docs/planes/cerrados/plan_dos_terminales.md). Cualquier bus puede hacer cualquier viaje: el terminal que la
-      partición asignó a cada viaje queda solo como dato.
-
-    Con `terminal` o `terminales` el día empieza en `network.day_start`: los viajes que salen antes se corren 24 h y
-    pasan al final del día (ver docs/decisiones/instancias.md, "Día completo de un electroterminal"). En `dep_s` y `arr_s` queda la
-    hora ya corrida. Con `data.muestra` se toma una muestra al azar de los viajes de cada terminal (`_muestra_por_terminal`)."""
     data, network = cfg["data"], cfg["network"]
     bloque, terminal, terminales = data.get("block_id"), data.get("terminal"), data.get("terminales")
     if sum(clave is not None for clave in (bloque, terminal, terminales)) != 1:
@@ -90,10 +73,6 @@ def leer_viajes(cfg: dict) -> tuple[pd.DataFrame, list[str], int]:
 
 
 def _muestra_por_terminal(df: pd.DataFrame, nombres: list[str], muestra: dict) -> pd.DataFrame:
-    """`muestra.viajes_por_terminal` viajes al azar de cada terminal (todos, si tiene menos), con `muestra.semilla`, para las
-    instancias chicas del costo de la partición (sección 4b de docs/planes/entrega_2.md). La muestra de un terminal depende
-    solo de su nombre, del tamaño y de la semilla, no de los otros terminales de la instancia: la de varios terminales es
-    exactamente la unión de las de cada uno."""
     por_terminal, semilla = muestra.get("viajes_por_terminal"), muestra.get("semilla")
     if not isinstance(por_terminal, int) or por_terminal <= 0 or not isinstance(semilla, int):
         raise ValueError(f"data.muestra necesita viajes_por_terminal (entero positivo) y semilla (entero); tiene {muestra}")
@@ -107,13 +86,6 @@ def _muestra_por_terminal(df: pd.DataFrame, nombres: list[str], muestra: dict) -
 
 
 def depositos_de(cfg: dict, terminales: list[str]) -> list[Depot]:
-    """Depósitos de los `terminales` (el electroterminal es a la vez depósito y lugar de carga), con sus cargadores y
-    potencia, en el orden de `terminales`.
-
-    La capacidad de estacionamiento de cada depósito (buses dentro a la vez, también de noche) sale de la config, no de
-    `depots.csv` (docs/decisiones/modelo.md). Es propia de cada terminal: `depots.capacidad_estacionamiento` para todos y
-    las excepciones de `depots.capacidad_por_deposito` (por nombre de terminal), según la regla máx(1 000, flota del
-    baseline del terminal solo) + 200. Sin ninguna de las dos, la capacidad queda sin límite (`None`)."""
     data = cfg["data"]
     depots_file = _ruta(_requerido(data, "depots_file", "data"))
     ids = depot_ids_por_nombre(depots_file)
@@ -135,12 +107,6 @@ def depositos_de(cfg: dict, terminales: list[str]) -> list[Depot]:
 
 
 def construir_instancia_subproblema(cfg: dict) -> Instance:
-    """Arma la `Instance` de un bloque (`data.block_id`), del día completo de un terminal (`data.terminal`) o de varios
-    terminales con sus depósitos (`data.terminales`; ver `leer_viajes`) leyendo los archivos que indica `data` en la
-    config.
-
-    Los viajes llevan horas en minutos enteros (salida hacia abajo, llegada hacia arriba). El horizonte se extiende
-    por el margen de deadhead (`network.horizon_margin`) y los buses parten con `battery.soc_initial`."""
     data, battery, costs, network = cfg["data"], cfg["battery"], cfg["costs"], cfg["network"]
 
     df, terminales, inicio = leer_viajes(cfg)

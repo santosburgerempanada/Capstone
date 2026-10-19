@@ -1,6 +1,3 @@
-"""Evaluación del objetivo (1) sobre una solución en forma de cadenas de viajes (usada por
-baseline, MILP y ALNS por igual: no depende de qué método generó la solución)."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -21,8 +18,6 @@ class CostBreakdown:
 
 
 def chain_deadhead_km(chain: TripChain, inst: Instance) -> float:
-    """Km de deadhead: salida de depósito, entre viajes (y hacia/desde un depósito si hay una
-    carga intermedia, ec. 20), y retorno. No incluye los propios arcos de viaje."""
     total = 0.0
     location = chain.depot_id
     for k, trip in enumerate(chain.trips):
@@ -41,13 +36,6 @@ def chain_deadhead_km(chain: TripChain, inst: Instance) -> float:
 
 
 def soc_at_return(chain: TripChain, inst: Instance) -> float:
-    """SOC con que el bus llega al depósito de retorno al final del día.
-
-    Parte del SOC tras el último viaje y descuenta la energía del deadhead de vuelta (km × consumo en
-    deadhead). Si hay una carga final (`recharges[len(trips)]`), descuenta la ida al depósito de carga,
-    suma lo cargado (sin pasar de `soc_max`) y luego descuenta el tramo de ese depósito al de retorno.
-    Si la cadena aún no tiene depósito de retorno asignado, no descuenta ese tramo. Se calcula a pedido
-    para que nunca quede desfasado de los viajes de la cadena."""
     bus = inst.bus_type
     soc = chain.soc_after[-1]
     ubicacion = chain.trips[-1].end_station
@@ -62,8 +50,6 @@ def soc_at_return(chain: TripChain, inst: Instance) -> float:
 
 
 def chain_charging_cost(chain: TripChain, inst: Instance) -> float:
-    """Σ e_c^t · potencia · Δt/60 sobre cada evento de carga diurna, integrado minuto a minuto
-    (igual que la suma discreta de las ecuaciones (1)/(8), sin asumir un precio único por evento)."""
     total = 0.0
     for recharge in all_recharge_events(chain):
         for minute in range(recharge.start_time, recharge.end_time):
@@ -72,12 +58,6 @@ def chain_charging_cost(chain: TripChain, inst: Instance) -> float:
 
 
 def evaluate(solution: Solution, inst: Instance) -> CostBreakdown:
-    """(1): costo fijo por bus + deadheads (por km) + carga diurna + carga nocturna.
-    La carga nocturna cubre el déficit de SOC con el que cada bus llega al depósito al terminar su día
-    (e_c^0 · (soc_max − s_{d,T-1})), tal como lo asume el paper: capacidad nocturna ilimitada. Ese SOC
-    ya descuenta la energía del deadhead de retorno (`soc_at_return`).
-    Recarga hasta soc_max aunque el bus haya partido con `soc_initial` < soc_max (decisión del
-    equipo, ver docs/decisiones/modelo.md)."""
     bus_fixed_cost = len(solution.chains) * inst.bus_type.fixed_cost_per_bus
 
     deadhead_km = sum(chain_deadhead_km(c, inst) for c in solution.chains)
@@ -95,9 +75,6 @@ def evaluate(solution: Solution, inst: Instance) -> CostBreakdown:
 
 
 def chain_variable_cost(chain: TripChain, inst: Instance) -> float:
-    """Costo de una cadena sin el costo fijo del bus: deadhead (por km), carga diurna y carga nocturna hasta
-    `soc_max`. Sumado sobre las cadenas, más `n_buses × costo fijo`, da `evaluate(...).total`. El repair lo usa para
-    medir cuánto cuesta insertar un viaje en un bus existente (ver docs/decisiones/alns.md)."""
     deadhead = chain_deadhead_km(chain, inst) * inst.deadhead_cost_per_km
     diurna = chain_charging_cost(chain, inst)
     nocturna = (

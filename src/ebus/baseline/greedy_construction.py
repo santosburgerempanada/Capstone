@@ -1,18 +1,3 @@
-"""Heurística greedy de una sola pasada: construye una solución completa sin backtracking
-(por eso no garantiza optimalidad). Sirve como caso base para comparar contra el MILP exacto
-y el ALNS (ver docs/paper/metodologia.md, sección "Caso base").
-
-Regla: los viajes se recorren en orden cronológico; cada uno se asigna a la cadena de bus ya
-abierta que lo pueda tomar al menor costo en vacío (cargando antes si es necesario), o si
-ninguna puede, se abre un bus nuevo. Es deliberadamente simple: no reconsidera decisiones
-previas, no busca depósitos u horarios alternativos para cargar, y no reequilibra cargadores
-entre buses — por eso NO reutiliza `heuristics/soc_adjustment.py` ni `heuristics/
-charger_power.py` (esos son operadores del ALNS pensados para corregir una solución parcial,
-con relajación temporal de restricciones; aquí construimos de una vez, respetando siempre las
-restricciones duras). Sí reutiliza `heuristics/depot_assignment.py` para el depósito de
-retorno, porque el balance por depósito (restricción (6)) no es una decisión de "calidad" del
-método sino un requisito de factibilidad que aplica a cualquier solución."""
-
 from __future__ import annotations
 
 from ebus.data.fleet import deadhead_energy_soc, trip_energy_soc
@@ -25,10 +10,6 @@ def _overlapping(ledger: dict[str, list[RechargeEvent]], depot_id: str, ts: int,
 
 
 def _available_power(events: list[RechargeEvent], ts: int, te: int, depot_power_kw: float) -> float:
-    """Potencia que le queda al depósito dentro de [ts, te) una vez restada la de las cargas
-    ya comprometidas (`events`), evaluada en el instante más cargado de la ventana — así una
-    carga nueva, con potencia constante, nunca hace que el total supere `P_d` en ningún
-    instante, sin tener que revisar las cargas ya comprometidas."""
     if not events:
         return depot_power_kw
     breakpoints = sorted({max(e.start_time, ts) for e in events} | {min(e.end_time, te) for e in events})
@@ -40,7 +21,6 @@ def _available_power(events: list[RechargeEvent], ts: int, te: int, depot_power_
 
 
 def _return_reserve(trip: Trip, inst: Instance) -> float:
-    """Fracción de batería que hay que reservar tras `trip` para volver al depósito más cercano."""
     depot = inst.nearest_depot(trip.end_station)
     return deadhead_energy_soc(inst.deadhead_distance_km(trip.end_station, depot.id), inst.bus_type)
 
@@ -48,11 +28,6 @@ def _return_reserve(trip: Trip, inst: Instance) -> float:
 def _try_append(
     chain: TripChain, trip: Trip, inst: Instance, ledger: dict[str, list[RechargeEvent]], reserve: float
 ) -> tuple[float, float, float, RechargeEvent | None] | None:
-    """Evalúa si `trip` puede agregarse al final de `chain`. Devuelve
-    (costo en vacío, soc antes del viaje, soc después del viaje, carga o None) si es factible,
-    o None si no cabe (ni directo ni cargando en el depósito más cercano). Además de los SOC, exige que
-    tras el viaje quede batería para volver al depósito más cercano (`reserve`, ver `_return_reserve`;
-    depende solo del viaje, así que el llamador la calcula una vez por viaje)."""
     last = chain.trips[-1]
     gap = trip.start_time - last.end_time
     bus = inst.bus_type
@@ -116,9 +91,6 @@ def _commit_append(
 
 
 def _open_chain(trip: Trip, inst: Instance) -> TripChain:
-    """Abre un bus nuevo desde el depósito más cercano al inicio de `trip`. Todo bus empieza
-    con `inst.soc_initial` (soc_max en el paper; puede ser menor en un subproblema a mitad del
-    día, ver docs/decisiones/parametros.md)."""
     depot = inst.nearest_depot(trip.start_station)
     to_trip = inst.deadhead(depot.id, trip.start_station)
     bus = inst.bus_type
@@ -133,8 +105,6 @@ def _open_chain(trip: Trip, inst: Instance) -> TripChain:
 
 
 def build_baseline_solution(inst: Instance) -> Solution:
-    """Construye una solución completa en una sola pasada cronológica. Ver el docstring del
-    módulo para la regla greedy y qué no hace a propósito."""
     trips_sorted = sorted(inst.trips, key=lambda t: (t.start_time, t.id))
     chains: list[TripChain] = []
     ledger: dict[str, list[RechargeEvent]] = {}

@@ -1,28 +1,3 @@
-"""Modelo (17)-(19) de la solución inicial (Sección 3.1): los viajes que hace **un** bus, sobre la red espacio-tiempo y el
-MILP de `model/milp.py` (decisión A de docs/decisiones/alns.md). Va en un módulo aparte porque necesita Gurobi; la solución
-inicial lo importa solo cuando lo usa.
-
-Diferencias con el MILP completo:
-- **Objetivo (17) con desempate (D):** maximizar los viajes del bus y, a igual número, el menor costo de deadhead (km).
-  Se implementa con un peso por viaje mayor que cualquier costo de deadhead posible de un bus (lexicográfico).
-- **Cobertura (18):** los viajes obligatorios (la sub-cadena) se hacen exactamente una vez; los demás, a lo más una vez;
-  los ya asignados a otros buses, ninguna.
-- **Un bus (19):** `MilpOptions.max_buses = 1`. Con un bus, la restricción (6) lo obliga a volver a su depósito de salida
-  (decisión I).
-- **Cargadores y potencia del depósito (7)-(8) sobre la capacidad que dejaron libre los buses anteriores** (`libre`,
-  decisión E cambiada el 2026-10-11): un arco de carga se prohíbe si en algún minuto de su intervalo no queda un cargador
-  libre (o no queda potencia), y su potencia se limita a la potencia libre mínima del intervalo. Con un solo bus es
-  exactamente (7)-(8) sobre la capacidad residual. Sin `libre` no se revisan (como el paper).
-La carga es la de la red (decisión H): arcos de carga en el depósito, potencia variable y carga parcial.
-
-**Red de un bus (decisión G):** por defecto el modelo usa `red_de_un_bus`, más chica que la del MILP completo: una sola
-pista por depósito (en vez de una por cada llegada) y, si se da `k_sucesores`, conexiones directas viaje → viaje solo hacia
-los K primeros sucesores alcanzables de cada viaje. Con `red_completa=True` usa la red del MILP (para comparar).
-
-**Armar una vez, resolver muchas (decisión G, 2026-10-12):** `ModeloUnBus` se construye con todos los viajes y, para cada
-bus, se cambian solo la cobertura (`fijar_obligatorios`, `quitar_viajes`) y la capacidad libre (`aplicar_capacidad_libre`)
-antes de `resolver`. Construir el modelo en Python es lo que más tarda."""
-
 from __future__ import annotations
 
 import bisect
@@ -44,21 +19,6 @@ _LIMITES_DEL_DEPOSITO = ("cargas simultáneas", "potencia total")
 
 def red_de_un_bus(inst: Instance, k_sucesores: int | None = None,
                   conexiones_forzadas: set[tuple[str, str]] | None = None) -> TimeSpaceNetwork:
-    """Red espacio-tiempo para **un** bus (decisión G). Igual a la del MILP (`model/network.py`) salvo en dos puntos:
-
-    1. **Una sola pista por depósito.** El MILP tiene una pista por cada llegada a un depósito para que el SOC de buses
-       distintos no se mezcle; con un bus no hace falta. La pista tiene un nodo en cada llegada y cada salida posibles,
-       en los cambios de tarifa, cada `time_step` y al final del horizonte (el sumidero). Entre dos nodos seguidos se puede
-       esperar o cargar. Es al menos tan flexible como las pistas del MILP: entre la llegada y la salida del bus, todos los
-       tramos de la pista se pueden cargar.
-    2. **Conexiones directas viaje → viaje** solo hacia los `k_sucesores` primeros viajes alcanzables de cada viaje
-       (ordenados por hora de salida; alcanzable = la holgura alcanza para el deadhead). Sin límite si es `None`. Por el
-       depósito, el bus siempre puede tomar cualquier viaje posterior. Las `conexiones_forzadas` (pares de ids de viajes,
-       p. ej. los pares pre-conectados de la Sección 3.1) se agregan siempre, estén o no entre los K primeros.
-
-    Los nodos de la pista llevan el evento `arrival:<depósito>:pista`, para que la extracción de cadenas registre las
-    visitas al depósito igual que en el MILP. Así, la parte del depósito crece linealmente con los viajes, no con su
-    cuadrado."""
     if inst.time_step <= 0:
         raise ValueError("time_step debe ser positivo")
     if k_sucesores is not None and k_sucesores < 0:
@@ -118,9 +78,6 @@ def red_de_un_bus(inst: Instance, k_sucesores: int | None = None,
 
 
 def enlaces_de_la_red(red: TimeSpaceNetwork, inst: Instance):
-    """Función `enlaza(a, b)`: el bus de `red` puede hacer `b` después de `a`, por una conexión directa de la red o
-    pasando por un depósito (la pista permite tomar cualquier viaje posterior si la holgura alcanza para ir y volver).
-    La usa la sub-cadena para elegir solo pares que caben en la red recortada."""
     directas = {(a.origin.event[len("end:"):], a.dest.event[len("start:"):]) for a in red.arcs
                 if a.type == ArcType.CONNECTION and a.origin.event.startswith("end:") and a.dest.event.startswith("start:")}
     depositos = [d.id for d in inst.depots]
@@ -135,18 +92,12 @@ def enlaces_de_la_red(red: TimeSpaceNetwork, inst: Instance):
 
 
 def opciones_un_bus(time_limit_s: float | None, output_flag: bool = False) -> MilpOptions:
-    """Opciones del MILP para un bus: `max_buses = 1` (19), sin los límites de cargadores y potencia del MILP (se aplican
-    sobre la capacidad libre) y sin límite de tiempo si `time_limit_s` es `None`. Tampoco impone la capacidad de
-    estacionamiento: la solución inicial del paper no se usa en las instancias reales (docs/decisiones/alns.md, 2026-10-12)
-    y, con un bus, solo importaría sumada a los buses anteriores."""
     return MilpOptions(time_limit_s=GRB.INFINITY if time_limit_s is None else time_limit_s, mip_gap=0.0,
                        enforce_charger_limit=False, enforce_power_limit=False, enforce_depot_capacity=False,
                        max_buses=1, output_flag=output_flag)
 
 
 class ModeloUnBus(EvspMilp):
-    """`EvspMilp` restringido a un bus: cambia el objetivo, la cobertura y los límites del depósito. Se construye una vez
-    y se resuelve para cada bus cambiando la cobertura y la capacidad libre."""
 
     def __init__(self, inst: Instance, obligatorios: set[str], options: MilpOptions,
                  libre: CapacidadLibre | None = None, red: TimeSpaceNetwork | None = None):
@@ -193,7 +144,6 @@ class ModeloUnBus(EvspMilp):
                 restriccion.Sense, restriccion.RHS = GRB.LESS_EQUAL, 1.0
 
     def fijar_obligatorios(self, viajes: set[str]) -> None:
-        """Los viajes de la sub-cadena (18). Deben estar sin asignar."""
         ocupados = set(viajes) & self.asignados
         if ocupados:
             raise ValueError(f"Viajes obligatorios ya asignados a otro bus: {sorted(ocupados)}")
@@ -201,18 +151,14 @@ class ModeloUnBus(EvspMilp):
         self._actualizar_cobertura()
 
     def quitar_viajes(self, viajes: set[str]) -> None:
-        """Viajes asignados a otro bus: este bus no puede hacerlos."""
         self.asignados |= set(viajes)
         self.obligatorios -= set(viajes)
         self._actualizar_cobertura()
 
     def _add_charger_limit(self) -> None:
-        """Los cargadores se aplican sobre la capacidad libre, en `aplicar_capacidad_libre`."""
+        pass
 
     def aplicar_capacidad_libre(self) -> None:
-        """(7)-(8) sobre la capacidad libre: un bus usa a lo más un cargador a la vez, así que basta con prohibir los arcos
-        de carga en cuyo intervalo, en algún minuto, no queda un cargador o potencia libre, y limitar la potencia de cada
-        arco a la potencia libre mínima de su intervalo (además del máximo del bus). Sin `libre`, solo el máximo del bus."""
         maximo_bus = self.inst.bus_type.max_charge_kw
         for a, c in self.C.items():
             if self.libre is None:
@@ -225,10 +171,6 @@ class ModeloUnBus(EvspMilp):
             self.p[a].UB = min(maximo_bus, max(0.0, potencia))
 
     def resolver(self) -> TripChain | None:
-        """Resuelve el modelo con la cobertura y la capacidad actuales y devuelve la cadena del bus, o `None` si no hay
-        solución (los obligatorios no caben en un bus, decisión J, o Gurobi no encontró ninguna en el tiempo dado). La
-        cadena pasa el validador sobre sus propios viajes, salvo los límites del depósito (los controla
-        `CapacidadLibre.ocupar`); cualquier otra violación es un bug."""
         self.model.optimize()
         if self.model.SolCount == 0:
             return None
@@ -247,9 +189,6 @@ class ModeloUnBus(EvspMilp):
 def cadena_de_un_bus(obligatorios: list[Trip], pool: list[Trip], inst: Instance, time_limit_s: float | None,
                      libre: CapacidadLibre | None = None, k_sucesores: int | None = None,
                      red_completa: bool = False, output_flag: bool = False) -> TripChain | None:
-    """Arma y resuelve una vez el modelo (17)-(19) con los viajes de `pool` (que incluye a los obligatorios). Para muchos
-    buses seguidos conviene `ModeloUnBus` armado una vez. Usa `red_de_un_bus` con `k_sucesores`, o la red del MILP con
-    `red_completa=True`."""
     ids_pool = {t.id for t in pool}
     faltan = [t.id for t in obligatorios if t.id not in ids_pool]
     if faltan:

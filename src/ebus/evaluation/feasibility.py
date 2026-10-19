@@ -1,7 +1,3 @@
-"""Verificador independiente de soluciones: se usa en tests y al final de cada corrida.
-No reutiliza la lógica de ningún operador (baseline, MILP o ALNS) — audita el resultado,
-no el proceso que lo generó."""
-
 from __future__ import annotations
 
 from collections import Counter
@@ -12,13 +8,10 @@ _EPS = 1e-6
 
 
 def _etiqueta(idx: int, chain) -> str:
-    """"Cadena 3" o, si la cadena tiene `bus_id`, "Cadena 3 (bus B004)"."""
     return f"Cadena {idx} (bus {chain.bus_id})" if chain.bus_id else f"Cadena {idx}"
 
 
 def check_solution(sol: Solution, inst: Instance) -> list[str]:
-    """Devuelve la lista de violaciones (vacía si es factible). Ver cada `_check_*` para el
-    detalle de qué restricción del paper corresponde a cada grupo."""
     violations: list[str] = []
     violations += _check_coverage(sol, inst)
     violations += _check_bus_ids(sol)
@@ -35,13 +28,11 @@ def check_solution(sol: Solution, inst: Instance) -> list[str]:
 
 
 def _check_bus_ids(sol: Solution) -> list[str]:
-    """Los `bus_id` asignados no se repiten entre cadenas (los `None` no cuentan)."""
     counts = Counter(c.bus_id for c in sol.chains if c.bus_id)
     return [f"bus_id {bus_id} repetido en {n} cadenas" for bus_id, n in counts.items() if n > 1]
 
 
 def _check_coverage(sol: Solution, inst: Instance) -> list[str]:
-    """Cada viaje cubierto exactamente una vez (restricción (2))."""
     violations = []
     expected = {t.id for t in inst.trips}
     counts = Counter(t.id for chain in sol.chains for t in chain.trips)
@@ -63,8 +54,6 @@ def _check_coverage(sol: Solution, inst: Instance) -> list[str]:
 
 
 def _check_chain_continuity(sol: Solution, inst: Instance) -> list[str]:
-    """Continuidad temporal y espacial de cada cadena: la holgura entre eventos consecutivos
-    (viaje -> carga -> viaje) debe alcanzar para el tiempo en vacío necesario."""
     violations = []
     for idx, chain in enumerate(sol.chains):
         label = f"{_etiqueta(idx, chain)} (depósito {chain.depot_id})"
@@ -116,7 +105,6 @@ def _check_chain_continuity(sol: Solution, inst: Instance) -> list[str]:
 
 
 def _check_soc_bounds(sol: Solution, inst: Instance) -> list[str]:
-    """soc_min <= SOC <= soc_max en todo momento (restricciones (9)-(10))."""
     violations = []
     for idx, chain in enumerate(sol.chains):
         label = _etiqueta(idx, chain)
@@ -133,10 +121,6 @@ def _check_soc_bounds(sol: Solution, inst: Instance) -> list[str]:
 
 
 def _check_initial_soc(sol: Solution, inst: Instance) -> list[str]:
-    """Ningún bus parte con más SOC que `soc_initial` (restricción (12), con el SOC inicial del
-    subproblema). Si no carga antes del primer viaje, el SOC antes de ese viaje es a lo más
-    soc_initial menos la energía del deadhead desde el depósito. La energía se calcula aquí,
-    sin reutilizar data/fleet.py."""
     violations = []
     bus = inst.bus_type
     for idx, chain in enumerate(sol.chains):
@@ -154,10 +138,6 @@ def _check_initial_soc(sol: Solution, inst: Instance) -> list[str]:
 
 
 def _check_soc_consistency(sol: Solution, inst: Instance) -> list[str]:
-    """El SOC guardado en cada cadena coincide con el que resulta de la dinámica (energía de deadheads, viajes y
-    cargas, con tope en soc_max). Detecta SOC desfasados, p. ej. tras quitar viajes sin recalcular. La
-    dinámica se recalcula aquí, sin reutilizar `heuristics/soc_adjustment.py::recompute_soc` ni `data/fleet.py`.
-    Informa solo el primer desajuste de cada cadena."""
     violations = []
     bus = inst.bus_type
 
@@ -193,10 +173,6 @@ def _check_soc_consistency(sol: Solution, inst: Instance) -> list[str]:
 
 
 def _check_recharge_positions(sol: Solution) -> list[str]:
-    """Las cargas ocurren entre viajes: la clave `k` va de 1 a `len(trips)` (carga tras el último viaje). Cargar antes
-    del primer viaje (clave 0, en el arco inicial) está prohibido por la restricción (13) del paper; un evento sin
-    potencia ni duración, que solo marca una visita al depósito, sí se admite. Claves mayores a `len(trips)` no
-    corresponden a ningún intervalo."""
     violations = []
     for idx, chain in enumerate(sol.chains):
         for k in sorted(chain.recharges):
@@ -209,9 +185,6 @@ def _check_recharge_positions(sol: Solution) -> list[str]:
 
 
 def _check_return_soc(sol: Solution, inst: Instance) -> list[str]:
-    """El bus debe llegar al depósito con SOC >= soc_min, descontando el deadhead de retorno (y, si hay
-    una carga final, la ida al depósito de carga antes de cargar). La energía se calcula aquí, sin
-    reutilizar `model/cost.py::soc_at_return`."""
     violations = []
     bus = inst.bus_type
 
@@ -239,7 +212,6 @@ def _check_return_soc(sol: Solution, inst: Instance) -> list[str]:
 
 
 def _check_charging_resources(sol: Solution, inst: Instance) -> list[str]:
-    """Cargadores simultáneos <= C_d y potencia total <= P_d por depósito y periodo (7)-(8)."""
     violations = []
     by_depot: dict[str, list] = {}
     for chain in sol.chains:
@@ -271,19 +243,6 @@ def _check_charging_resources(sol: Solution, inst: Instance) -> list[str]:
 
 
 def _check_depot_capacity(sol: Solution, inst: Instance) -> list[str]:
-    """Capacidad de estacionamiento (docs/decisiones/modelo.md): en cada minuto del horizonte, los buses dentro de cada
-    depósito no superan su `capacity` (los depósitos con `capacity = None` no tienen límite). Cálculo propio, sin
-    reutilizar `evaluation/metrics.py`.
-
-    Un bus está dentro de un depósito:
-    - desde el inicio del horizonte hasta que debe salir hacia su primer viaje, en su depósito de salida;
-    - entre dos viajes, si pasa por el depósito (cargas o visitas sin carga): desde que puede llegar tras el viaje anterior
-      hasta que debe salir hacia el siguiente. Si en el mismo intervalo pasa por varios depósitos, en cada uno durante sus
-      cargas (y, en el primero y el último, desde la llegada o hasta la salida);
-    - después del último viaje: durante sus cargas finales y, en su depósito de retorno, desde que llega hasta el fin del
-      horizonte (pasa la noche ahí).
-    Se toma el caso más largo posible (llegar lo antes posible y salir lo más tarde posible), así que la cuenta nunca es
-    menor que la real."""
     capacidades = {d.id: d.capacity for d in inst.depots if d.capacity is not None}
     if not capacidades:
         return []
@@ -291,7 +250,6 @@ def _check_depot_capacity(sol: Solution, inst: Instance) -> list[str]:
     delta = {d: [0] * (fin - inicio + 2) for d in capacidades}
 
     def dentro(deposito: str, desde: int, hasta: int) -> None:
-        """Un bus dentro de `deposito` en los minutos de [desde, hasta)."""
         if deposito not in delta:
             return
         desde, hasta = max(desde, inicio), min(hasta, fin + 1)
@@ -300,7 +258,6 @@ def _check_depot_capacity(sol: Solution, inst: Instance) -> list[str]:
             delta[deposito][hasta - inicio] -= 1
 
     def visitas(eventos) -> list[tuple[str, int, int]]:
-        """Cargas seguidas en el mismo depósito, agrupadas: (depósito, inicio de la primera, fin de la última)."""
         grupos: list[list] = []
         for e in eventos:
             if grupos and grupos[-1][0] == e.depot_id:
@@ -350,9 +307,6 @@ def _check_depot_capacity(sol: Solution, inst: Instance) -> list[str]:
 
 
 def _check_depot_balance(sol: Solution, inst: Instance) -> list[str]:
-    """Balance de buses por depósito (restricción (6)): los que salen de un depósito deben
-    coincidir con los que vuelven a él. Es necesario para que el horario sea sostenible
-    día a día (la flota disponible al iniciar debe reponerse con la que vuelve)."""
     violations = []
     starts = Counter(chain.depot_id for chain in sol.chains if chain.trips)
     returns = Counter(chain.return_depot_id for chain in sol.chains if chain.trips and chain.return_depot_id)

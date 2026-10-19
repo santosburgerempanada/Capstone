@@ -1,8 +1,3 @@
-"""Estima la matriz de deadheads de una instancia (paraderos de sus viajes + sus depósitos) y la guarda en CSV.
-
-Ejemplo: python scripts/generar_deadheads.py --config config/instances/VN-dia.yaml
-Por defecto escribe en `data.deadhead_file` de la config; no sobrescribe un archivo existente sin --sobrescribir."""
-
 import argparse
 from pathlib import Path
 

@@ -1,7 +1,3 @@
-"""Reasignación de depósitos. No es específico del ALNS: cualquier método (baseline, MILP,
-ALNS) necesita decidir el depósito de inicio y de retorno de cada bus, así que ambas
-funciones son reutilizables por todos (ver `src/ebus/baseline/greedy_construction.py`)."""
-
 from __future__ import annotations
 
 from collections import Counter
@@ -19,7 +15,6 @@ _RETORNO_INFACTIBLE = 1e6
 
 
 def assign_start_depots(sol: Solution, inst: Instance) -> None:
-    """Cada bus sale del depósito más cercano a la estación de inicio de su primer viaje."""
     for chain in sol.chains:
         if not chain.trips:
             continue
@@ -27,8 +22,6 @@ def assign_start_depots(sol: Solution, inst: Instance) -> None:
 
 
 def _ultimo_lugar(chain: TripChain) -> tuple[str, int]:
-    """Desde dónde y a qué hora sale el bus hacia el depósito de retorno: el fin de su último viaje o, si carga después
-    de él (`recharges[len(trips)]`), el depósito y el fin de esa carga."""
     lugar, t = chain.trips[-1].end_station, chain.trips[-1].end_time
     for carga in recharge_events(chain, len(chain.trips)):
         lugar, t = carga.depot_id, carga.end_time
@@ -36,7 +29,6 @@ def _ultimo_lugar(chain: TripChain) -> tuple[str, int]:
 
 
 def retorno_factible(chain: TripChain, depot_id: str, inst: Instance) -> bool:
-    """El bus puede volver a `depot_id`: llega antes del fin del horizonte y con SOC ≥ `soc_min`."""
     lugar, t = _ultimo_lugar(chain)
     if t + inst.deadhead(lugar, depot_id) > inst.horizon_end:
         return False
@@ -44,19 +36,6 @@ def retorno_factible(chain: TripChain, depot_id: str, inst: Instance) -> bool:
 
 
 def assign_return_depots(sol: Solution, inst: Instance) -> None:
-    """Asigna el retorno de cada bus minimizando el tiempo de deadhead total, exigiendo que el número de buses que vuelve
-    a cada depósito coincida con el número que salió de él (restricción (6)). Los buses son intercambiables (flota
-    homogénea): lo único que importa es el conteo por depósito, no qué bus físico vuelve a cuál.
-
-    Es el algoritmo húngaro del paper, resuelto como problema de transporte (buses × depósitos, con el balance como
-    restricción) y **solo entre retornos factibles** (`retorno_factible`): con varios depósitos, mandar un bus a uno
-    lejano puede dejarlo sin batería o fuera del horizonte (docs/decisiones/instancias.md, "Dos terminales"). Con un solo depósito todos
-    vuelven a él.
-
-    Si con los depósitos de salida actuales el balance obliga a algún retorno infactible (p. ej., dos buses que solo
-    alcanzan a volver a un depósito del que salió uno), ese bus pasa a **salir** de un depósito al que sí puede volver,
-    si su cadena sigue siendo factible desde ahí (`_mover_salidas`), y se reparte de nuevo. Si no hay forma, el retorno
-    infactible queda y el validador lo reporta."""
     for _ in range(len(sol.chains) + 1):
         _repartir_retornos(sol, inst)
         if not _mover_salidas(sol, inst):
@@ -64,9 +43,6 @@ def assign_return_depots(sol: Solution, inst: Instance) -> None:
 
 
 def _mover_salidas(sol: Solution, inst: Instance) -> bool:
-    """A cada bus con un retorno infactible le cambia el depósito de salida por uno al que sí puede volver (el más
-    cercano a su último lugar primero), recalculando su SOC, si la cadena queda factible saliendo y volviendo ahí.
-    Devuelve si cambió alguno. Usa `recompute_soc` y `es_factible`, que recorren la cadena completa."""
     cambio = False
     for i, chain in enumerate(sol.chains):
         if not chain.trips or retorno_factible(chain, chain.return_depot_id, inst):
@@ -86,7 +62,6 @@ def _mover_salidas(sol: Solution, inst: Instance) -> bool:
 
 
 def _repartir_retornos(sol: Solution, inst: Instance) -> None:
-    """Problema de transporte de `assign_return_depots` con los depósitos de salida actuales."""
     chains = [c for c in sol.chains if c.trips]
     if not chains:
         return

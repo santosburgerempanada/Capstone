@@ -1,7 +1,3 @@
-# Día completo de Vespucio Norte con el destroy vaciar_bus y vuelta a la mejor solución cada 500 iteraciones, para que
-# las semillas que se estancan (98 % de rechazos, hallazgos H24) vuelvan a la mejor. Igual que VN-dia-vaciar.yaml en todo
-# lo demás. Corridas: results/VN-dia/E7-vaciar-ajuste/vaciar-r500_s<semilla>.*
-# (lote 2b de docs/planes/entrega_2.md). Variante para experimentar: no se adopta por defecto mientras no se decida.
 extends: VN-dia-vaciar.yaml
 
 alns:

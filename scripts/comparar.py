@@ -1,9 +1,3 @@
-"""Tabla comparativa de una instancia con las corridas ya guardadas en results/<instancia>/ (baseline, MILP y las
-corridas de cada experimento), sin volver a correr nada. La escribe en results/<instancia>/comparacion.csv (o
-comparacion_<experimento>.csv) y actualiza la tabla de corridas del registro, results/<instancia>/README.md.
-
-Ejemplo: python scripts/comparar.py --instancia VN-dia [--experimento E2-dmax]"""
-
 import argparse
 from pathlib import Path
 

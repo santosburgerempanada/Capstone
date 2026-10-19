@@ -1,10 +1,3 @@
-"""Partición del problema: asigna cada recorrido a un electroterminal (el más cercano al
-centroide del trazado) y divide los viajes de cada terminal en bloques horarios.
-
-Entrada: GTFS en `data/raw/` + parámetros en `config/particion.yaml`.
-Salida: CSV (y un Excel piloto) en `data/processed/<particion.nombre>/`.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,7 +7,6 @@ import pandas as pd
 
 
 def sec(h) -> int:
-    """'HH:MM:SS' -> segundos desde las 00:00."""
     a = str(h).strip().split(":")
     return int(a[0]) * 3600 + int(a[1]) * 60 + int(a[2])
 
@@ -25,8 +17,6 @@ def hhmm(s) -> str:
 
 
 def cargar(cfg: dict):
-    """Lee los insumos indicados en `cfg['data']`. El primer vehículo de `fleet_file` es el
-    bus del subproblema."""
     d = cfg["data"]
     gtfs = Path(d["gtfs_dir"])
     trips = pd.read_csv(gtfs / "trips.txt", dtype=str)
@@ -42,7 +32,6 @@ def cargar(cfg: dict):
 
 
 def asignar_centroide(gtfs_dir, trips_servicio, depots, nivel="ruta") -> pd.DataFrame:
-    """Terminal más cercano al centroide (ponderado por largo) del trazado."""
     sh = pd.read_csv(Path(gtfs_dir) / "shapes.txt", dtype={"shape_id": str})
 
     sh = sh[sh.shape_id.isin(trips_servicio.shape_id.unique())]
@@ -74,7 +63,6 @@ def asignar_centroide(gtfs_dir, trips_servicio, depots, nivel="ruta") -> pd.Data
 
 
 def construir_viajes(trips, freqs, stops, st, dist, asign, kwh_km, servicio) -> pd.DataFrame:
-    """Expande las ventanas de `frequencies.txt` en viajes individuales."""
     m = freqs.merge(trips[["trip_id", "route_id", "service_id", "shape_id"]], on="trip_id")
     m = m[m.service_id == servicio]
     m = m.merge(asign[["shape_id", "terminal"]], on="shape_id", how="left")
@@ -114,8 +102,6 @@ def construir_viajes(trips, freqs, stops, st, dist, asign, kwh_km, servicio) -> 
 
 
 def partir_bloques(dep_s, objetivo, max_h, gran_min):
-    """Cortes horarios [(ini_s, fin_s), ...] que dejan ~`objetivo` viajes por bloque, con
-    bloques de a lo más `max_h` horas y cortes en múltiplos de `gran_min` minutos."""
     g = gran_min * 60
     nslots = 24 * 3600 // g
     cnt = np.bincount((dep_s // g).astype(int), minlength=nslots)[:nslots]
@@ -137,7 +123,6 @@ def partir_bloques(dep_s, objetivo, max_h, gran_min):
 
 
 def asignar_bloques(V, p):
-    """Agrega a `V` las columnas de bloque y devuelve (V, plan) con el plan de bloques."""
     V = V.copy()
     V["bloque"] = ""
     plan = []
@@ -176,7 +161,6 @@ def saturacion_terminales(V, depots) -> pd.DataFrame:
 
 
 def tabla_viajes(V) -> pd.DataFrame:
-    """Viajes en formato de salida, con `viaje_id` = <bloque>-<n correlativo en el bloque>."""
     out = V.copy()
     out["hora_salida"] = out.dep_s.map(hhmm)
     out["hora_llegada"] = out.arr_s.map(hhmm)
@@ -193,7 +177,6 @@ def tabla_viajes(V) -> pd.DataFrame:
 
 
 def generar(cfg: dict, out_dir: str | Path | None = None, piloto: str | None = None) -> Path:
-    """Corre la partición completa y escribe los resultados. Devuelve el Excel piloto."""
     p = cfg["particion"]
     out_dir = Path(out_dir or Path("data/processed") / p["nombre"])
     out_dir.mkdir(parents=True, exist_ok=True)

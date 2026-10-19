@@ -1,9 +1,3 @@
-"""Event-based time-space network without a vehicle index.
-
-A depot lane belongs to a *commercial arrival*, not to a bus. Only the selected
-flow determines which bus uses it. Lanes must not merge: a scalar SOC cannot
-represent two buses at the same physical place and time.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -132,11 +126,6 @@ def add_charging_arcs(net: TimeSpaceNetwork) -> None:
 
 
 def merge_nodes(net: TimeSpaceNetwork) -> None:
-    """Canonicalize identical logical events, never different arrival lanes.
-
-    Physical-coordinate merging would permit exchanging SOC between buses.
-    Trip endpoints already have one node shared by all admissible connections.
-    """
     net.arcs = list(dict.fromkeys(net.arcs))
     net.nodes = {n for a in net.arcs for n in (a.origin, a.dest)}
     net.nodes.update(net.source_nodes | net.sink_nodes)

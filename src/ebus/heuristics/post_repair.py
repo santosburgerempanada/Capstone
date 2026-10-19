@@ -1,18 +1,3 @@
-"""Post-reparación (Apéndice A.(3) del paper) y cierre de la solución tras cada repair del ALNS.
-
-`min_bus_chains` cubre los viajes que el repair no pudo insertar (o que quitó el ajuste de cargadores) con el **mínimo
-número de buses nuevos**, con la restricción de energía de cada bus y **sin carga durante el día**, resolviendo un modelo
-en Gurobi, como el paper. `cerrar_solucion` agrega esos buses a la solución, los etiqueta, reasigna los depósitos de
-retorno y calcula el costo.
-
-Decisiones del equipo (ver docs/decisiones/alns.md):
-- A igual número de buses, el modelo prefiere el de menor costo (deadhead y energía): el objetivo es lexicográfico.
-- Un viaje que ni un bus recién salido puede hacer (por horario o por batería) queda solo en su propio bus, y el validador lo
-  marca; no se inventa una solución.
-- Los buses nuevos siguen la numeración (`B423`, `B424`…); los existentes conservan su `bus_id`.
-- Si Gurobi no está disponible, falla con un mensaje claro. El modelo es chico (los viajes pendientes son pocos) y cabe
-  incluso en la licencia gratuita de Gurobi."""
-
 from __future__ import annotations
 
 import re
@@ -46,25 +31,12 @@ def _cadena(deposito: str, viajes: list[Trip], retorno: str, inst: Instance) -> 
 
 
 def _factible_solo(trip: Trip, inst: Instance) -> bool:
-    """Un bus recién salido del depósito más cercano puede hacer el viaje y volver, sin cargar."""
     deposito = inst.nearest_depot(trip.start_station).id
     return es_factible(_cadena(deposito, [trip], deposito, inst), inst)
 
 
 def min_bus_chains(trips: list[Trip], inst: Instance, time_limit_s: float,
                    cupos: dict[str, int] | None = None) -> list[TripChain]:
-    """Buses nuevos que cubren `trips` con el mínimo número de buses (Apéndice A.(3)): cada viaje, una vez; cada bus sale
-    de un depósito y vuelve a uno (con el mismo número de salidas y retornos por depósito); dos viajes seguidos deben ser
-    conectables en el tiempo; y la energía de todo el recorrido del bus (salida, viajes, deadheads y regreso) no puede
-    bajar el SOC de `soc_initial` a menos de `soc_min`, **sin cargar durante el día**.
-
-    Objetivo lexicográfico: primero el número de buses; a igual número, el menor costo variable (deadhead por km y energía
-    que hay que reponer de noche). Los viajes que ni solos son factibles quedan cada uno en su propio bus, fuera del modelo.
-    `time_limit_s` viene de `alns.post_repair.time_limit_s` en la config.
-
-    `cupos` limita cuántos buses nuevos pueden salir de cada depósito (capacidad de estacionamiento que queda libre,
-    docs/decisiones/modelo.md); un depósito que no aparece no tiene límite. Si con los cupos no hay solución, lanza
-    `RuntimeError`, como cuando Gurobi no encuentra ninguna."""
     if not trips:
         return []
     sueltos = [t for t in trips if not _factible_solo(t, inst)]
@@ -151,11 +123,6 @@ def _numero(bus_id: str | None) -> int:
 
 
 def _liberar_retornos_infactibles(sol: Solution, inst: Instance) -> tuple[bool, list[Trip]]:
-    """Con varios depósitos, el balance (6) puede obligar a un retorno al que el bus no llega (el repair revisa cada bus
-    por separado; el balance es entre buses). A cada bus así se le pide volver a su propio depósito de salida, que no
-    altera el balance, y se le quitan sus últimos viajes hasta que lo logre (`quitar_hasta_factible`, la misma regla del
-    destroy y del ajuste de cargadores). Devuelve si cambió algún bus y los viajes quitados, para la post-reparación.
-    Modifica `sol`."""
     cambio = False
     quitados: list[Trip] = []
     if len(inst.depots) == 1:
@@ -177,8 +144,6 @@ def _liberar_retornos_infactibles(sol: Solution, inst: Instance) -> tuple[bool, 
 
 
 def _cupos(sol: Solution, inst: Instance) -> dict[str, int]:
-    """Buses que todavía caben en cada depósito con capacidad de estacionamiento: la capacidad menos los buses que ya
-    salen de ahí (de noche, cada bus está en su depósito; el balance (6) hace que vuelvan tantos como salen)."""
     salen: dict[str, int] = {}
     for cadena in sol.chains:
         salen[cadena.depot_id] = salen.get(cadena.depot_id, 0) + 1
@@ -186,9 +151,6 @@ def _cupos(sol: Solution, inst: Instance) -> dict[str, int]:
 
 
 def _buses_nuevos(pendientes: list[Trip], sol: Solution, inst: Instance, time_limit_s: float) -> list[TripChain]:
-    """Post-reparación respetando los cupos de estacionamiento de cada depósito. Si con los cupos no hay solución (no
-    caben más buses donde hacen falta), se arma sin ellos: la solución excede la capacidad, el validador lo marca y el
-    ALNS rechaza esa candidata (docs/decisiones/modelo.md)."""
     cupos = _cupos(sol, inst)
     if not cupos or not pendientes:
         return min_bus_chains(pendientes, inst, time_limit_s)
@@ -199,14 +161,6 @@ def _buses_nuevos(pendientes: list[Trip], sol: Solution, inst: Instance, time_li
 
 
 def cerrar_solucion(sol: Solution, pendientes: list[Trip], inst: Instance, time_limit_s: float) -> Solution:
-    """Solución completa a partir de una solución reparada y sus viajes pendientes: agrega los buses de la post-reparación
-    (con `bus_id` que siguen la numeración), reasigna los depósitos de retorno con el algoritmo húngaro (balance por
-    depósito, restricción (6)) y calcula el costo. No modifica `sol`.
-
-    Con varios depósitos, si el balance deja a algún bus sin poder volver, se le quitan viajes
-    (`_liberar_retornos_infactibles`) y esos viajes vuelven a la post-reparación, cuyos buses nuevos cumplen el balance
-    entre ellos; se repite (repartiendo de nuevo los retornos) hasta que todos sean factibles (docs/decisiones/instancias.md, "Dos
-    terminales")."""
     cerrada = sol.copy()
     cerrada.unassigned = []
     pendientes = list(pendientes)

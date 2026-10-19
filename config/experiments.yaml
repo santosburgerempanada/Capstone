@@ -1,5 +1,3 @@
-# Diseño experimental, análogo a la Sección 4 del paper.
-# Las instancias I-VI del paper se replican con subconjuntos de servicios de Santiago.
 base_config: santiago.yaml
 
 instances:
@@ -10,10 +8,10 @@ instances:
   - {id: V,   routes: null, time_window: null,               depots: few,    note: "pocos depósitos con C_d y P_d"}
   - {id: VI,  routes: null, time_window: null,               depots: all,    note: "todos los terminales como depósitos"}
 
-methods: [baseline, milp, alns]   # baseline = caso base greedy (cota superior de referencia); MILP solo para instancias pequeñas (I-III)
+methods: [baseline, milp, alns]
 
 sensitivity:
   accept_probability: [0.95, 0.97, 0.99, 0.995]
   destroy_max: [5, 10, 15, 20]
-  bus_type: [1, 2, 3]      # Tabla 6 del paper / modelos reales de la flota
-  repetitions: 5           # semillas por configuración
+  bus_type: [1, 2, 3]
+  repetitions: 5

@@ -1,6 +1,3 @@
-"""Solución inicial factible (Sección 3.1, Fig. 4): pre-conexión de viajes + modelo (17)-(19).
-Plan: docs/planes/plan_solucion_inicial.md; decisiones: docs/decisiones/alns.md (entradas del 2026-10-11)."""
-
 from __future__ import annotations
 
 import bisect
@@ -18,11 +15,6 @@ registro = logging.getLogger(__name__)
 
 
 def build_trip_pairs(trips: list[Trip], T_tc: int) -> list[tuple[Trip, Trip]]:
-    """Pares pre-conectados (Sección 3.1): (a, b) si `a` termina en la estación donde parte `b` y la espera entre ambos
-    está entre 0 y `T_tc` minutos (`0 <= b.start_time - a.end_time <= T_tc`). Se enumeran todos: un viaje puede estar en
-    varios pares. Como la estación es la misma, no hay deadhead entre `a` y `b`.
-
-    Orden determinista: por `a` (salida, id) y, para cada `a`, por `b` (salida, id)."""
     if T_tc < 0:
         raise ValueError("T_tc debe ser no negativo")
     por_estacion: dict[str, list[Trip]] = defaultdict(list)
@@ -47,17 +39,6 @@ def sample_sub_chain(
     pairs: list[tuple[Trip, Trip]], pool: set[str], N_p: int, inst: Instance, rng: np.random.Generator,
     enlaza: Callable[[Trip, Trip], bool] | None = None,
 ) -> list[tuple[Trip, ...]]:
-    """Sub-cadena Tps_n (Sección 3.1, Fig. 4; decisiones B, C y K de docs/decisiones/alns.md).
-
-    Solo cuentan los pares con sus dos viajes en el pool (`pool`: ids de los viajes sin asignar). Se parte de un par al
-    azar y se agregan, también al azar, pares cuyo primer viaje es alcanzable después del último viaje de la sub-cadena
-    (`Instance.can_connect`, que incluye el deadhead) y que no repiten viajes, hasta tener `N_p` pares o hasta que no
-    quede ninguno válido. Si ningún par tiene sus dos viajes en el pool, la semilla es un viaje suelto del pool, al azar.
-
-    Devuelve los bloques en orden: tuplas `(a, b)` para los pares o `(viaje,)` para la semilla suelta, de modo que se
-    pueda quitar el último bloque si la sub-cadena no cabe en un bus (decisión J). `rng` es un `numpy.random.Generator`.
-    `enlaza(a, b)` reemplaza a `Instance.can_connect` para decidir si un par sigue a otro: con la red recortada de la
-    solución inicial, solo cuentan los enlaces que existen en esa red (`modelo_un_bus.enlaces_de_la_red`)."""
     if N_p < 1:
         raise ValueError("N_p debe ser al menos 1")
     if not pool:
@@ -86,13 +67,6 @@ def sample_sub_chain(
 def extend_sub_chain(sub_chain: list[Trip], pool: list[Trip], inst: Instance, time_limit_s: float | None,
                      libre: CapacidadLibre | None = None, k_sucesores: int | None = None,
                      red_completa: bool = False) -> TripChain | None:
-    """Modelo (17)-(19): la cadena de un bus que hace todos los viajes de `sub_chain` y el máximo de viajes del `pool`
-    (que incluye a los de la sub-cadena); a igual número, el menor deadhead. Con (3)-(6) y (9)-(16) y carga parcial; con
-    `libre`, solo carga donde quedan cargadores y potencia libres (decisión E). Devuelve `None` si la sub-cadena no cabe
-    en un bus o Gurobi no encuentra solución en `time_limit_s` (decisión J). La red es la de un bus (una pista por
-    depósito; conexiones directas a los `k_sucesores` primeros sucesores), o la del MILP con `red_completa=True`
-    (decisión G). Arma el modelo para un solo bus; `initial_solution` lo arma una vez para todos. Necesita Gurobi; ver
-    `heuristics/modelo_un_bus.py`."""
     from ebus.heuristics.modelo_un_bus import cadena_de_un_bus
 
     return cadena_de_un_bus(sub_chain, pool, inst, time_limit_s, libre, k_sucesores, red_completa)
@@ -101,25 +75,6 @@ def extend_sub_chain(sub_chain: list[Trip], pool: list[Trip], inst: Instance, ti
 def initial_solution(inst: Instance, T_tc: int, N_p: int, rng: np.random.Generator, time_limit_s: float | None,
                      post_repair_time_limit_s: float, use_preconnection: bool = True,
                      k_sucesores: int | None = None) -> Solution:
-    """Solución inicial del paper (Sección 3.1, Fig. 2): mientras queden viajes sin asignar, elegir una sub-cadena,
-    resolver el modelo (17)-(19) para un bus con todo el pool y quitar del pool los viajes de ese bus. El número de buses
-    es el número de vueltas (no se fija antes). Cada bus parte con `inst.soc_initial`.
-
-    - **Un modelo para todos los buses (decisión G):** el modelo de un bus se arma una vez, sobre la red de un bus con los
-      `k_sucesores` primeros sucesores de cada viaje más las conexiones de los pares pre-conectados; para cada bus se
-      cambian la cobertura (obligatorios y viajes ya asignados) y la capacidad libre. Las sub-cadenas solo encadenan
-      pares que están enlazados en esa red, para que siempre quepan en ella.
-    - **Sub-cadena que no cabe en un bus (decisión J):** se quita su último par y se reintenta; si ni un par cabe, se usa
-      el primer viaje del par solo. Un viaje que ni solo cabe queda pendiente.
-    - **Cargadores y potencia (decisión E, cambiada el 2026-10-11):** cada bus solo carga donde quedan cargadores y
-      potencia libres después de los buses ya construidos (`CapacidadLibre`).
-    - **Al final (decisión I):** el ajuste de cargadores y potencia (`enforce_charging_resources`), como red de
-      seguridad, y el cierre de la solución (`cerrar_solucion`): los viajes que quitó el ajuste y los pendientes van a la
-      post-reparación, y los depósitos de retorno se reparten con `assign_return_depots`.
-
-    `rng` es un `numpy.random.Generator` creado con la semilla de la corrida (decisión K); `time_limit_s` es el límite de
-    cada modelo de un bus (sin límite si es `None`) y `post_repair_time_limit_s`, el de la post-reparación. Con
-    `use_preconnection=False` no se forman pares: cada sub-cadena es un viaje suelto (decisión C). Necesita Gurobi."""
     from ebus.heuristics.charger_power import enforce_charging_resources
     from ebus.heuristics.modelo_un_bus import ModeloUnBus, enlaces_de_la_red, opciones_un_bus, red_de_un_bus
     from ebus.heuristics.post_repair import cerrar_solucion

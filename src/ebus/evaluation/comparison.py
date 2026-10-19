@@ -1,6 +1,3 @@
-"""Tabla comparativa entre métodos de solución (tipo Tablas 7-8 del paper): baseline vs. MILP
-vs. ALNS para la misma instancia. No le importa qué método generó cada `Solution`."""
-
 from __future__ import annotations
 
 import json
@@ -19,9 +16,6 @@ def compare_methods(
     inst: Instance,
     computation_time_s: dict[str, float] | None = None,
 ) -> pd.DataFrame:
-    """Una fila por método: costo total y su desglose, nº de buses, nº de violaciones de
-    factibilidad, tiempo de cómputo (si se entrega) y brecha % respecto al método más caro
-    (típicamente el baseline, que sirve de cota superior de referencia)."""
     computation_time_s = computation_time_s or {}
     rows = []
     for name, sol in solutions.items():
@@ -49,10 +43,6 @@ def compare_methods(
 
 def tabla_de_resultados(instancia: str, carpeta: str | Path | None = None,
                         experimento: str | None = None) -> pd.DataFrame:
-    """Tabla comparativa armada con los resúmenes guardados en `<carpeta>/<instancia>/` y sus subcarpetas (ver
-    `resultados.py`), sin volver a correr nada. Una fila por corrida, ordenadas por costo, con la mejora porcentual
-    respecto del baseline (si hay uno). El índice identifica la corrida por su ruta dentro de la carpeta de la
-    instancia: `baseline`, `E2-dmax/d20_s42`. Con `experimento`, solo las corridas de ese experimento y el baseline."""
     raiz = (Path(carpeta) if carpeta is not None else Path(__file__).resolve().parents[3] / "results") / instancia
     filas = []
     for ruta in sorted(raiz.rglob("*.json")) if raiz.is_dir() else []:
@@ -101,9 +91,7 @@ FIN_REGISTRO = "<!-- corridas:fin -->"
 
 
 def tabla_markdown(tabla: pd.DataFrame) -> str:
-    """Las corridas de `tabla_de_resultados` como tabla Markdown, para el registro de la instancia."""
     def valor(v) -> str:
-        """Números como en los docs: miles separados por espacio y coma decimal (229 326,95)."""
         if v is None or (isinstance(v, float) and pd.isna(v)):
             return ""
         if isinstance(v, numbers.Number) and not isinstance(v, bool):
@@ -131,9 +119,6 @@ def tabla_markdown(tabla: pd.DataFrame) -> str:
 
 
 def actualizar_registro(ruta: str | Path, instancia: str, tabla: pd.DataFrame) -> Path:
-    """Reescribe la tabla de corridas del registro de la instancia (`results/<instancia>/README.md`), entre las marcas
-    `INICIO_REGISTRO` y `FIN_REGISTRO`, sin tocar el resto (la descripción de los experimentos, que se escribe a mano).
-    Si el archivo no existe, lo crea con una sección de experimentos vacía."""
     ruta = Path(ruta)
     bloque = f"{INICIO_REGISTRO}\n{tabla_markdown(tabla)}\n{FIN_REGISTRO}"
     if ruta.exists():

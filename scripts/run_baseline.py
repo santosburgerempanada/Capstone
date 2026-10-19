@@ -1,6 +1,3 @@
-"""Corre el caso base (heurística greedy, sin garantía de optimalidad) sobre una instancia y lo guarda en
-results/<instancia>/baseline.* (es determinista: uno por instancia)."""
-
 import argparse
 import time
 

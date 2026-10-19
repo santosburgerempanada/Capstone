@@ -1,12 +1,6 @@
-# Día completo de Vespucio Norte con D_max = 20 (en vez de 5): igual que VN-dia.yaml en todo lo demás.
-# Para comparar contra D_max = 5 tras la sensibilidad en toy_carga (docs/decisiones/alns.md). Mantiene case.name = VN-dia, así que
-# sus corridas quedan en results/VN-dia/ como la variante d20 (experimento E2-dmax: results/VN-dia/E2-dmax/d20_s42.*).
-# D_max = 20 es una desviación del paper (Tabla 9: D_max = 5); no se adopta por defecto mientras no se decida.
-# Fija los operadores y el reinicio que tenía config/default.yaml cuando se corrió (antes del 2026-10-14, H25), para que
-# siga reproduciendo sus corridas.
 extends: VN-dia.yaml
 
 alns:
   destroy_max: 20
   operadores_destroy: [random, worst, similarity]
-  reinicio_mejor_cada: 0         # nunca (null no reemplaza el valor del default)
+  reinicio_mejor_cada: 0

@@ -1,7 +1,3 @@
-"""Costo de la partición en optimalidad, medido de forma exacta en instancias chicas (estrategia 2 de la sección 4b de
-docs/planes/entrega_2.md): el MILP resuelve cada terminal por separado y los terminales juntos, y la pérdida es la
-diferencia entre la suma de los óptimos por separado y el óptimo del conjunto."""
-
 from __future__ import annotations
 
 import time
@@ -14,9 +10,6 @@ _OPTIMO = 2
 
 def resolver_exacto(inst: Instance, limite_s: float, mip_gap: float, output_flag: bool = True
                     ) -> tuple[Solution | None, dict]:
-    """Resuelve el MILP de `inst` con Gurobi. Devuelve la mejor solución encontrada (None si no hay ninguna) y un resumen:
-    estado, si probó el óptimo, objetivo, cota de Gurobi (ningún costo es menor), gap, tamaño del modelo y tiempos. La
-    solución sale de `EvspMilp.extract_solution`, que la valida y comprueba que su costo sea el objetivo de Gurobi."""
     from ebus.model.milp import EvspMilp, MilpOptions
     from ebus.model.network import build_network
 
@@ -51,13 +44,6 @@ def resolver_exacto(inst: Instance, limite_s: float, mip_gap: float, output_flag
 
 
 def perdida_particion(separados: list[dict], conjunto: dict) -> dict:
-    """Costo de la partición: lo que cuestan los terminales resueltos por separado menos lo que cuestan juntos.
-
-    Cada resultado es el resumen de `resolver_exacto` más `buses` (los de su mejor solución). Si todos llegaron al
-    óptimo, la pérdida es exacta; si no, queda en el intervalo [suma de cotas por separado − objetivo del conjunto, suma de
-    objetivos por separado − cota del conjunto], porque cada óptimo está entre su cota y su objetivo. Los % son respecto
-    del objetivo del conjunto. La diferencia de buses es la de las mejores soluciones (el MILP minimiza el costo, no los
-    buses)."""
     todos = [*separados, conjunto]
     if any(r.get("objetivo") is None or r.get("cota_gurobi") is None for r in todos):
         return {"exacta": False, "costo_min": None, "costo_max": None, "pct_min": None, "pct_max": None,

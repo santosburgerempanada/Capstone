@@ -1,5 +1,3 @@
-"""Resuelve el MILP (1)-(16) con Gurobi. Solo para instancias pequeñas (en el paper, <= 105 viajes)."""
-
 import argparse
 
 from ebus.config import load_config

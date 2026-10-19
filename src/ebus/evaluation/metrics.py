@@ -1,5 +1,3 @@
-"""Indicadores reportados en la Sección 4 (Tablas 7-8 y análisis de la Fig. 7)."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,8 +11,6 @@ from ebus.model.entities import Instance, Solution, recharge_events
 
 
 def peak_concurrent_trips(inst: Instance) -> tuple[int, int]:
-    """(máximo de viajes en curso a la vez, minuto en que ocurre). Cada viaje en curso necesita su
-    propio bus, así que es una cota inferior del número de buses de cualquier solución."""
     eventos: list[tuple[int, int]] = []
     for trip in inst.trips:
         eventos.append((trip.start_time, 1))
@@ -28,22 +24,6 @@ def peak_concurrent_trips(inst: Instance) -> tuple[int, int]:
 
 
 def min_buses_con_deadheads(inst: Instance) -> int:
-    """Cota inferior del número de buses que considera los deadheads e ignora la batería (Paso 3 de
-    docs/planes/plan_solucion_inicial.md): el mínimo de cadenas que cubren todos los viajes si un bus puede hacer `b`
-    después de `a` cuando la holgura alcanza para ir de uno al otro, directo o pasando por un depósito (la matriz de
-    deadheads no siempre cumple la desigualdad triangular, y una cadena real puede pasar por el depósito a cargar).
-
-    Es la cobertura mínima por caminos del grafo de viajes encadenables: viajes − emparejamiento máximo. Como relaja la
-    batería, los cargadores y el horizonte, ninguna solución usa menos buses; y nunca es menor que
-    `peak_concurrent_trips`, porque viajes simultáneos no se pueden encadenar.
-
-    El emparejamiento se calcula como un flujo máximo, sin listar los pares encadenables (en `VN-dia` son 23 millones).
-    Cada estación inicial tiene una línea de tiempo con dos tipos de eventos: la **llegada** de cada viaje `a` (cuando
-    `a` puede estar ahí: su fin + el deadhead mínimo) y la **salida** de cada viaje `b` que parte ahí. Una unidad de flujo
-    va de `a` a su llegada a una estación, espera en la línea de tiempo y toma la salida de un `b` posterior. Así, `a`
-    alcanza a `b` exactamente cuando `b` es encadenable después de `a`, y el flujo máximo es el emparejamiento máximo.
-    A igual minuto, la llegada va antes que la salida (basta con llegar justo a tiempo), salvo la de un viaje a su propia
-    estación de salida, que va después: un viaje no se encadena consigo mismo."""
     trips = inst.trips
     n = len(trips)
     if n == 0:
@@ -95,8 +75,6 @@ def min_buses_con_deadheads(inst: Instance) -> int:
 
 @dataclass
 class CotaCosto:
-    """Cota inferior del costo (1) de cualquier solución (estrategia 1 del costo de la partición, sección 4b de
-    docs/planes/entrega_2.md)."""
 
     buses: int
     costo_fijo: float
@@ -110,16 +88,6 @@ class CotaCosto:
 
 
 def cota_costo(inst: Instance, buses: int | None = None) -> CotaCosto:
-    """Ninguna solución cuesta menos que `buses × costo fijo + energía mínima × precio más barato`.
-
-    - `buses`: la cota de flota con deadheads (`min_buses_con_deadheads`, que se calcula si no se entrega: en las
-      instancias grandes tarda minutos u horas).
-    - Energía mínima: cada bus parte con `soc_initial` y termina el día recargado hasta `soc_max` (objetivo (1)), así que
-      compra toda la energía que gasta más `soc_max − soc_initial` de su batería. Lo que gasta es al menos la energía de
-      los viajes, que es la misma en toda solución; el deadhead y su energía se toman como cero.
-    - Toda esa energía se compra a lo más barato al precio mínimo de la tarifa, de día o de noche.
-
-    Ignora la batería, los cargadores y el deadhead, así que puede no ser alcanzable ni con un solver exacto."""
     if buses is None:
         buses = min_buses_con_deadheads(inst)
     bus = inst.bus_type
@@ -129,12 +97,6 @@ def cota_costo(inst: Instance, buses: int | None = None) -> CotaCosto:
 
 
 def depot_occupancy_profile(sol: Solution, inst: Instance, depot_id: str) -> list[int]:
-    """Buses dentro del depósito en cada minuto de `[horizon_start, horizon_end]` (índice 0 = `horizon_start`).
-
-    Un bus está dentro desde el inicio del horizonte hasta que sale hacia su primer viaje, mientras
-    carga (desde que llega al depósito hasta que termina la carga) y desde que vuelve al final del día.
-    Como todos los buses parten y terminan en el depósito, la ocupación en los extremos del horizonte
-    es igual a la flota; lo informativo es el perfil entre medio (ver docs/decisiones/modelo.md)."""
     largo = inst.horizon_end - inst.horizon_start + 1
     delta = [0] * (largo + 1)
 
@@ -180,16 +142,12 @@ def depot_occupancy_profile(sol: Solution, inst: Instance, depot_id: str) -> lis
 
 
 def minutes_over_capacity(perfil: list[int], capacidad: int) -> int:
-    """Minutos del perfil en que hay más buses que plazas."""
     return sum(1 for n in perfil if n > capacidad)
 
 
 def solution_summary(sol: Solution, inst: Instance) -> dict:
-    """Costo total y desglose, n° de buses, % tiempo en viaje / vacío / carga, cargas por bus,
-    duración media de carga, servicios distintos por bus, buses con vacío pre/post operación."""
     raise NotImplementedError
 
 
 def charging_load_profile(sol: Solution, inst: Instance) -> pd.DataFrame:
-    """Potencia y n° de cargadores en uso por depósito y periodo."""
     raise NotImplementedError

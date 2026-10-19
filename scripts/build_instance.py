@@ -1,5 +1,3 @@
-"""Construye y guarda una instancia en data/processed/ a partir de una configuración."""
-
 import argparse
 from pathlib import Path
 

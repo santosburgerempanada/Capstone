@@ -1,13 +1,3 @@
-"""Guarda en disco el resultado de una corrida (baseline, ALNS o MILP) para poder compararlo después sin
-volver a ejecutarla. Organización de `results/` (ver docs/decisiones/resultados.md):
-
-    results/<instancia>/baseline.json                   el caso base (determinista: uno por instancia)
-    results/<instancia>/<experimento>/<nombre>.json     una corrida de un experimento (p. ej. E2-dmax/d20_s42)
-
-Cada corrida escribe `<nombre>.json` (resumen: costo y desglose, buses, violaciones, parámetros, código usado),
-`<nombre>_buses.csv` (una fila por bus) y, en el ALNS, `<nombre>_historia.csv.gz` (una fila por iteración). Una
-corrida con el mismo nombre sobrescribe la anterior: por eso cada experimento tiene su propio identificador."""
-
 from __future__ import annotations
 
 import json
@@ -30,8 +20,6 @@ def _hhmm(minuto: int) -> str:
 
 
 def _version_del_codigo() -> dict:
-    """Commit con que se corrió y si había cambios sin commitear fuera de `results/` (None si git no está
-    disponible)."""
     def git(*args: str) -> str | None:
         try:
             r = subprocess.run(["git", *args], cwd=RAIZ, capture_output=True, text=True, timeout=10)
@@ -44,14 +32,11 @@ def _version_del_codigo() -> dict:
 
 
 def carpeta_de_corrida(instancia: str, experimento: str | None = None, out_dir: str | Path | None = None) -> Path:
-    """`results/<instancia>/` (o `<out_dir>/<instancia>/`) y, si la corrida es de un experimento, su subcarpeta."""
     carpeta = (Path(out_dir) if out_dir is not None else RAIZ / "results") / instancia
     return carpeta / experimento if experimento else carpeta
 
 
 def variante_por_defecto(config_path: str | Path, instancia: str) -> str:
-    """Nombre de la variante a partir de la config: `VN-dia-d20.yaml` de la instancia `VN-dia` es `d20`, y la config
-    base de la instancia (`VN-dia.yaml`) es `base`. Una config con otro nombre se usa entera."""
     nombre = Path(config_path).stem
     if nombre == instancia:
         return "base"
@@ -59,8 +44,6 @@ def variante_por_defecto(config_path: str | Path, instancia: str) -> str:
 
 
 def tabla_de_buses(sol: Solution, inst: Instance) -> pd.DataFrame:
-    """Una fila por bus: depósitos, viajes, horarios, SOC (antes del primer viaje, tras el último y al llegar
-    al depósito), km de deadhead y número de cargas."""
     filas = []
     for chain in sol.chains:
         primero, ultimo = chain.trips[0], chain.trips[-1]
@@ -86,8 +69,6 @@ def resumen_de_corrida(
     cfg: dict | None = None, config_path: str | None = None, corrida: dict | None = None,
     experimento: str | None = None,
 ) -> dict:
-    """Resumen de una corrida, listo para serializar a JSON. `corrida` guarda datos propios del método (p. ej., las
-    iteraciones y la semilla del ALNS) para poder compararlos después."""
     costo = evaluate(sol, inst)
     violaciones = check_solution(sol, inst)
     cota, minuto_cota = peak_concurrent_trips(inst)
@@ -149,8 +130,6 @@ def guardar_corrida(
     out_dir: str | Path | None = None, cfg: dict | None = None, config_path: str | None = None,
     corrida: dict | None = None, experimento: str | None = None, nombre: str | None = None,
 ) -> tuple[Path, Path]:
-    """Escribe el resumen (JSON) y la tabla de buses (CSV) de la corrida en `carpeta_de_corrida(...)`, con el nombre
-    `nombre` (por defecto, el del método). Devuelve ambas rutas."""
     carpeta = carpeta_de_corrida(instancia, experimento, out_dir)
     carpeta.mkdir(parents=True, exist_ok=True)
     base = nombre or metodo
@@ -164,10 +143,6 @@ def guardar_corrida(
 
 def guardar_historia(nombre: str, instancia: str, historia: list[dict], out_dir: str | Path | None = None,
                      experimento: str | None = None) -> Path:
-    """Escribe la historia de una corrida (una fila por iteración: operadores, resultado, costos y temperatura) en
-    `<nombre>_historia.csv.gz`, junto a su JSON, para graficar la convergencia. Va comprimida (15 000 iteraciones son
-    ~1,5 MB sin comprimir) y sin fecha en el gzip, para que la misma historia dé el mismo archivo;
-    `pd.read_csv` la lee directamente."""
     carpeta = carpeta_de_corrida(instancia, experimento, out_dir)
     carpeta.mkdir(parents=True, exist_ok=True)
     ruta = carpeta / f"{nombre}_historia.csv.gz"

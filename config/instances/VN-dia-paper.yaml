@@ -1,10 +1,6 @@
-# Día completo de Vespucio Norte con el ALNS del paper: solo sus operadores (destroy random, worst y similarity; repair
-# greedy y regret) y sin volver a la mejor solución. Es la configuración que tenía VN-dia.yaml hasta el 2026-10-14 (con la que
-# se corrieron E0-referencia y los lotes 1 y 2); desde entonces el default agrega vaciar_bus y el reinicio cada 500 (H25).
-# Sirve de control para comparar contra el ALNS del paper.
 extends: VN-dia.yaml
 
 alns:
   operadores_destroy: [random, worst, similarity]
   operadores_repair: [greedy, regret]
-  reinicio_mejor_cada: 0         # nunca (null no reemplaza el valor del default)
+  reinicio_mejor_cada: 0

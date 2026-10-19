@@ -1,12 +1,3 @@
-"""ALNS sobre una instancia, partiendo del baseline (solución inicial provisoria; ver docs/decisiones/alns.md).
-
-Cada corrida pertenece a un experimento, que se registra en results/<instancia>/README.md (ver
-docs/decisiones/resultados.md). Se guarda en results/<instancia>/<experimento>/<variante>_s<semilla>.*: la variante
-sale del nombre de la config (VN-dia-d20.yaml -> d20; la config base de la instancia -> base).
-
-Ejemplo: python scripts/run_alns.py --config config/instances/VN-dia-d20.yaml --experimento E2-dmax --semilla 1
-Corridas de filtro (pocas iteraciones, no se versionan): --filtro las guarda en <experimento>/filtro/."""
-
 import argparse
 
 from ebus.baseline.greedy_construction import build_baseline_solution

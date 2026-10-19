@@ -1,14 +1,3 @@
-"""Operadores destroy (Apéndice A.(1) del paper). Cada uno quita viajes de la solución y devuelve la solución
-destruida junto con los viajes quitados, que luego reinserta el repair.
-
-Los tres operadores del paper son `random_destroy`, `worst_destroy` y `similarity_destroy`. En cada iteración quitan un
-número de viajes **al azar entre 1 y `d_max`** (decisión del equipo, ver docs/decisiones/alns.md). Todos reciben el `rng`
-de la librería `alns` (un `numpy.random.Generator`) y no modifican la solución que reciben: trabajan sobre una copia.
-
-Más abajo quedan, como **extensión opcional desactivada** (no son del paper), los operadores `chain_destroy`,
-`string_destroy` y `cluster_destroy` que aportó `Yusolis`. `operadores_destroy` arma el registro de operadores activos
-a partir de la config."""
-
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
@@ -22,16 +11,6 @@ from ebus.model.entities import Instance, Solution, Trip, TripChain, recharge_ev
 
 
 def quitar_viajes(sol: Solution, viajes: Iterable[Trip], inst: Instance) -> Solution:
-    """Copia de `sol` sin los `viajes` (se reconocen por su `id`), lista para que el repair los reinserte.
-
-    - No modifica `sol`: devuelve una solución nueva e independiente.
-    - Un bus que se queda sin viajes desaparece. Los demás conservan su depósito, su `bus_id` y sus viajes restantes.
-    - Las cargas se reacomodan: `recharges[k]` va entre los viajes `k-1` y `k`, así que al quitar un viaje las cargas de
-      los intervalos que lo rodeaban se **concatenan en orden cronológico** en el intervalo resultante (no se pierde
-      ninguna). La excepción son las que quedarían antes del primer viaje, porque cargar en el arco inicial está
-      prohibido (restricción (13)): esas se descartan.
-    - El SOC de los buses modificados se recalcula con `recompute_soc`; los buses sin cambios quedan idénticos.
-    - El costo de la solución resultante no está calculado (`cost = None`): aún faltan los viajes quitados."""
     ids = {t.id for t in viajes}
     cadenas = []
     for cadena in sol.chains:
@@ -58,10 +37,6 @@ def quitar_viajes(sol: Solution, viajes: Iterable[Trip], inst: Instance) -> Solu
 
 
 def quitar_hasta_factible(resto: list[TripChain], posicion: int, inst: Instance) -> tuple[list[TripChain], list[Trip]]:
-    """`resto` es una cadena a la que ya se le quitaron viajes (lista vacía si se quedó sin viajes). Si dejó de ser
-    factible (por batería o por horarios), le quita el viaje en `posicion` (el que seguía al primer viaje quitado) y los
-    siguientes, o los últimos si ya no quedan, hasta que vuelva a serlo o se quede sin viajes. Devuelve la cadena (en
-    una lista, vacía si desapareció) y los viajes que hubo que quitar de más."""
     extra: list[Trip] = []
     while resto and not es_factible(resto[0], inst):
         restantes = resto[0].trips
@@ -72,14 +47,6 @@ def quitar_hasta_factible(resto: list[TripChain], posicion: int, inst: Instance)
 
 
 def quitar_viajes_factible(sol: Solution, viajes: Iterable[Trip], inst: Instance) -> tuple[Solution, list[Trip]]:
-    """`quitar_viajes` que deja factibles todas las cadenas. Lo usan todos los destroy.
-
-    Quitar un viaje puede **romper** una cadena: si hacer el viaje gasta menos energía (o tiempo) que el deadhead directo
-    que lo reemplaza, sin él el bus puede quedarse sin batería o no llegar a tiempo. El paper no considera este caso;
-    nuestros datos no cumplen la desigualdad triangular entre viajes y deadheads (decisión del equipo, ver
-    docs/decisiones/alns.md). En las cadenas que quedan infactibles se quitan también los viajes siguientes
-    (`quitar_hasta_factible`, la misma regla del ajuste de cargadores). Devuelve la solución destruida y todos los viajes
-    quitados: los pedidos y, al final, los quitados de más."""
     viajes = list(viajes)
     ids = {t.id for t in viajes}
     cadenas: list[TripChain] = []
@@ -101,14 +68,12 @@ def _todos_los_viajes(sol: Solution) -> list[Trip]:
 
 
 def _cuantos(rng: np.random.Generator, d_max: int, disponibles: int) -> int:
-    """Número de viajes a quitar en esta iteración: uniforme entre 1 y `d_max`, sin pasar de los que hay."""
     return min(int(rng.integers(1, d_max + 1)), disponibles)
 
 
 def random_destroy(
     sol: Solution, inst: Instance, d_max: int, rng: np.random.Generator
 ) -> tuple[Solution, list[Trip]]:
-    """Destroy aleatorio: quita viajes al azar."""
     viajes = _todos_los_viajes(sol)
     k = _cuantos(rng, d_max, len(viajes))
     quitados = [viajes[i] for i in rng.choice(len(viajes), size=k, replace=False)] if k else []
@@ -118,10 +83,6 @@ def random_destroy(
 def worst_destroy(
     sol: Solution, inst: Instance, d_max: int, rng: np.random.Generator, *, l_min: int, t_max: int
 ) -> tuple[Solution, list[Trip]]:
-    """Destroy "peor". Primero vacía cadenas con menos de `l_min` viajes, elegidas al azar entre las cortas y solo si
-    caben completas en el número de viajes a quitar; después quita los viajes cuya holgura (`slack`) con el viaje anterior
-    **y** con el siguiente supera `t_max` minutos, de la peor (mayor suma) a la mejor. No completa con viajes al azar: si
-    no hay más candidatos, quita menos. Los viajes de los extremos de una cadena no son candidatos."""
     k = _cuantos(rng, d_max, sum(len(c.trips) for c in sol.chains))
     quitados: list[Trip] = []
 
@@ -146,8 +107,6 @@ def worst_destroy(
 
 
 def time_similarity(a: Trip, b: Trip, inst: Instance) -> float:
-    """(A.3): TR_ab = |t_a1 − t_b1| + |t_a2 − t_b2| + d(s_a1, s_b1) + d(s_a2, s_b2), con t1 y t2 las horas de inicio y
-    fin, y `d` el tiempo de deadhead entre las estaciones de inicio y las de fin."""
     return (
         abs(a.start_time - b.start_time)
         + abs(a.end_time - b.end_time)
@@ -159,10 +118,6 @@ def time_similarity(a: Trip, b: Trip, inst: Instance) -> float:
 def similarity_destroy(
     sol: Solution, inst: Instance, d_max: int, rng: np.random.Generator, *, power_factor: float
 ) -> tuple[Solution, list[Trip]]:
-    """Destroy por similitud temporal (A.3). Parte de un viaje al azar; en cada paso toma como referencia un viaje al azar
-    del conjunto ya quitado, ordena los viajes restantes por similitud (menor `TR` primero) y quita el que está en el
-    percentil `r^p` de esa lista, con `r` uniforme en (0, 1) y `p = power_factor`. Los restantes se reordenan en cada
-    paso, porque el conjunto de viajes disponibles cambia."""
     viajes = _todos_los_viajes(sol)
     k = _cuantos(rng, d_max, len(viajes))
     quitados: list[Trip] = []
@@ -186,9 +141,6 @@ def _viajes_al_azar(sol: Solution, d_max: int, rng: np.random.Generator) -> list
 def chain_destroy(
     sol: Solution, inst: Instance, d_max: int, rng: np.random.Generator, budget_factor: int = 2, bias: float = 3
 ) -> tuple[Solution, list[Trip]]:
-    """Route removal: elimina buses completos con baja utilización (cada bus eliminado ahorra su
-    costo fijo). Prefiere cadenas cortas (índice ~ r^bias). Puede superar d_max hasta
-    budget_factor * d_max para poder vaciar una cadena entera."""
     budget = budget_factor * d_max
     pool = sorted((c for c in sol.chains if len(c.trips) <= budget), key=lambda c: len(c.trips))
     removed: list[Trip] = []
@@ -204,9 +156,6 @@ def chain_destroy(
 def string_destroy(
     sol: Solution, inst: Instance, d_max: int, rng: np.random.Generator, l_max: int = 4
 ) -> tuple[Solution, list[Trip]]:
-    """String removal (SISR): desde un viaje semilla, recorre los viajes más cercanos (hora de inicio
-    + deadhead entre orígenes) y de cada cadena distinta quita un tramo CONSECUTIVO de hasta l_max
-    viajes que contiene al viaje visitado."""
     trips = _todos_los_viajes(sol)
     chain_of = {id(t): c for c in sol.chains for t in c.trips}
     seed = trips[int(rng.integers(len(trips)))]
@@ -231,16 +180,12 @@ def string_destroy(
 
 
 def _line(t: Trip):
-    """Identificador de línea del viaje (usa `line` o, si no existe, `route_id`)."""
     return getattr(t, "line", getattr(t, "route_id", None))
 
 
 def cluster_destroy(
     sol: Solution, inst: Instance, d_max: int, rng: np.random.Generator, w_station: float = 20.0, w_line: float = 10.0
 ) -> tuple[Solution, list[Trip]]:
-    """Cluster espacio-temporal: quita los d_max viajes más relacionados con una semilla aleatoria.
-    Relación = |Δ hora de inicio| + w_station·[otro terminal de origen] + w_line·[otra línea],
-    con ruido U(0.8, 1.2). Los pesos están en las unidades de start_time (se asumen minutos)."""
     trips = _todos_los_viajes(sol)
     seed = trips[int(rng.integers(len(trips)))]
 
@@ -262,10 +207,6 @@ DestroyOperator = Callable[[Solution, Instance, int, np.random.Generator], tuple
 def vaciar_bus_destroy(
     sol: Solution, inst: Instance, d_max: int, rng: np.random.Generator, bias: float = 3
 ) -> tuple[Solution, list[Trip]]:
-    """Vacía un bus completo, de cualquier largo (extensión, no es del paper; docs/decisiones/alns.md): ordena los buses
-    por número de viajes (menos primero; a igual número, por `bus_id`) y elige el del percentil `r^bias`, con sesgo a los
-    de menos viajes pero pudiendo elegir cualquiera. Quita **todos** sus viajes, aunque sean más que `d_max`, para que el
-    repair los reparta entre los demás buses y el bus desaparezca."""
     cadenas = sorted((c for c in sol.chains if c.trips), key=lambda c: (len(c.trips), c.bus_id or ""))
     if not cadenas:
         return quitar_viajes_factible(sol, [], inst)
@@ -278,9 +219,6 @@ _DESTROY_EXTENSIONES = ("chain", "string", "cluster", "vaciar_bus")
 
 
 def operadores_destroy(alns_cfg: dict, extensiones: bool = False) -> dict[str, DestroyOperator]:
-    """Operadores destroy activos, con sus parámetros tomados de la sección `alns` de la config. Los activos son los de
-    `alns.operadores_destroy` (por nombre; si no está, los tres del paper); `extensiones=True` activa además todas las
-    extensiones (`chain`, `string`, `cluster` y `vaciar_bus`, que no son del paper)."""
     worst, similarity = alns_cfg["worst_destroy"], alns_cfg["similarity_destroy"]
     todos: dict[str, Callable[[], DestroyOperator]] = {
         "random": lambda: random_destroy,

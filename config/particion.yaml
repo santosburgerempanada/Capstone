@@ -1,15 +1,13 @@
-# Partición del problema en subproblemas (terminal más cercano al centroide del recorrido,
-# luego bloques horarios por terminal). Ver docs/decisiones/instancias.md.
 extends: santiago.yaml
 
 data:
   shape_distances_file: data/interim/shape_distances.csv
 
 particion:
-  nombre: centroide                  # subcarpeta de data/processed/ donde se escribe la salida
-  servicio: L                        # service_id del día tipo (frequencies.txt solo trae L, S y D)
-  nivel: ruta                        # 'ruta' (ida+vuelta juntas) o 'shape'
-  objetivo_viajes: 500               # viajes objetivo por bloque
-  max_bloque_h: 3.0                  # duración máxima de un bloque
-  granularidad_min: 30               # los cortes de bloque caen en múltiplos de esto
-  piloto_desde: "14:00"              # el Excel piloto usa el primer bloque que parte >= esta hora
+  nombre: centroide
+  servicio: L
+  nivel: ruta
+  objetivo_viajes: 500
+  max_bloque_h: 3.0
+  granularidad_min: 30
+  piloto_desde: "14:00"

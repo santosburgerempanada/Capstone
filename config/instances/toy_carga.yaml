@@ -1,6 +1,3 @@
-# Instancia sintética que obliga a cargar (Paso 0 del plan de la Fase 4, docs/planes/cerrados/plan_fase4_alns.md).
-# VN-10 no ejercita la carga (ningún bus carga en ese bloque), así que el ajuste de SOC y el de cargadores del ALNS
-# se prueban con esta instancia: batería chica (45 kWh) y solo 2 cargadores, para que el límite C_d pese.
 extends: ../default.yaml
 
 case:

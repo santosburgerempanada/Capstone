@@ -1,9 +1,3 @@
-"""Exact MILP for main.tex, with event copies preserving individual SOC.
-
-No vehicle index: selected unit flows become buses during extraction. Charging
-uses continuous per-arc power and energy (q = p * minutes / 60), rather than the
-shared-power products and auxiliary linearizations of the original Jia model.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -122,9 +116,6 @@ class EvspMilp:
             self.model.addConstr(self.n_buses <= self.options.max_buses, name="fleet_limit")
 
     def _add_depot_capacity(self) -> None:
-        """Capacidad de estacionamiento: en cada instante, los buses dentro de cada depósito con `capacity` (esperando
-        antes de salir, cargando o esperando entre viajes, y después de volver) no la superan. Todo lo que un bus hace
-        dentro del depósito es un arco de espera o de carga en la red, así que basta con sumarlos."""
         if not self.options.enforce_depot_capacity:
             return
         for d in self.inst.depots:
@@ -204,7 +195,6 @@ class EvspMilp:
         return self.extract_solution()
 
     def extract_solution(self) -> Solution:
-        """Follow unit paths; preserve even uncharged depot detours in the output."""
         from ebus.model.cost import evaluate
         from ebus.evaluation.feasibility import check_solution
 
@@ -219,9 +209,6 @@ class EvspMilp:
         return solution
 
     def extraer_cadenas(self) -> list[TripChain]:
-        """Las cadenas del flujo elegido (un camino unitario por bus), sin validar la solución completa ni comparar el
-        costo con el objetivo: eso lo hace `extract_solution`. Lo usa también el modelo de un bus de la solución inicial,
-        cuyo objetivo no es el costo y que no cubre todos los viajes."""
         if self.model is None or not self.model.SolCount:
             raise RuntimeError("Cannot extract without an incumbent")
         trips = {t.id: t for t in self.inst.trips}
